@@ -81,7 +81,9 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
   const dias = diasRestantes(l.fechaLimite)
   const importeNum = formatImporte(l.importe)
   const tieneEnlace = l.enlace && l.enlace !== '#'
-  const provincia = l.provincia || 'España'
+  const ubicacion = l.municipio && l.provincia
+    ? `${l.municipio} · ${l.provincia}`
+    : l.municipio || l.provincia || 'España'
 
   return (
     <article
@@ -170,8 +172,8 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
           />
           <MetaCell
             icon={<MapPin size={11} />}
-            label="Provincia"
-            value={provincia}
+            label="Ubicación"
+            value={ubicacion}
           />
           <MetaCell
             icon={<Tag size={11} />}

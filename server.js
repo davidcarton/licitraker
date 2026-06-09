@@ -103,38 +103,84 @@ function getCPVFromClassification(classification) {
   return codes.length > 0 ? codes.join(' ') : null
 }
 
-const PROVINCIAS_CONOCIDAS = [
-  'Navarra','Madrid','Barcelona','Cataluña','Andalucía','Valencia','Galicia',
-  'Aragón','Castilla','Murcia','Extremadura','Asturias','Cantabria','Rioja',
-  'Vasco','Canarias','Baleares','Ceuta','Melilla','Sevilla','Málaga','Córdoba',
-  'Granada','Huelva','Cádiz','Almería','Jaén','Burgos','León','Salamanca',
-  'Valladolid','Zamora','Segovia','Ávila','Palencia','Soria','Zaragoza',
-  'Huesca','Teruel','Alicante','Castellón','Lérida','Gerona','Tarragona',
-  'Coruña','Lugo','Ourense','Pontevedra','Álava','Guipúzcoa','Vizcaya',
-  'Badajoz','Cáceres','Oviedo','Santander','Logroño','Murcia','Toledo',
-  'Albacete','Ciudad Real','Cuenca','Guadalajara','Las Palmas','Tenerife',
-]
+const PROVINCIAS = new Set([
+  'Álava','Albacete','Alicante','Almería','Asturias','Ávila','Badajoz','Barcelona',
+  'Burgos','Cáceres','Cádiz','Cantabria','Castellón','Ciudad Real','Córdoba',
+  'Cuenca','Gerona','Granada','Guadalajara','Guipúzcoa','Huelva','Huesca',
+  'Jaén','La Rioja','Las Palmas','León','Lérida','Lugo','Madrid','Málaga',
+  'Murcia','Navarra','Ourense','Palencia','Pontevedra','Salamanca','Segovia',
+  'Sevilla','Soria','Tarragona','Santa Cruz de Tenerife','Teruel','Toledo',
+  'Valencia','Valladolid','Vizcaya','Zamora','Zaragoza','Ceuta','Melilla',
+  'A Coruña','Islas Baleares',
+])
 
-function extraerProvincia(cfs, titulo, organismo) {
-  // 1. RealizedLocation en el proyecto
+function normalizar(s) {
+  return s ? s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim() : ''
+}
+
+function esProvincia(s) {
+  const n = normalizar(s)
+  for (const p of PROVINCIAS) {
+    if (normalizar(p) === n) return true
+  }
+  return false
+}
+
+function canonizarProvincia(s) {
+  const n = normalizar(s)
+  for (const p of PROVINCIAS) {
+    if (normalizar(p) === n) return p
+  }
+  return s ? s.trim() : null
+}
+
+function toTitleCase(s) {
+  if (!s) return null
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+}
+
+function extraerUbicacion(cfs, titulo, organismo) {
+  let provincia = null
+  let municipio = null
+
+  function procesarSubentity(val) {
+    if (!val) return
+    if (esProvincia(val)) {
+      if (!provincia) provincia = canonizarProvincia(val)
+    } else {
+      if (!municipio) municipio = toTitleCase(val)
+    }
+  }
+
+  // 1. RealizedLocation del proyecto
   const proj = cfs.ProcurementProject || {}
   const loc = proj.RealizedLocation
   if (loc) {
     const addr = loc.Address || {}
-    const p = getText(addr.CountrySubentity) || getText(addr.CityName)
-    if (p) return p
+    procesarSubentity(getText(addr.CountrySubentity))
+    procesarSubentity(getText(addr.CityName))
   }
-  // 2. PostalAddress del organismo
-  const party = ((cfs.LocatedContractingParty || {}).Party) || {}
-  const postal = party.PostalAddress || {}
-  const p2 = getText(postal.CountrySubentity)
-  if (p2) return p2
-  // 3. Buscar en título u organismo
-  const haystack = `${titulo || ''} ${organismo || ''}`
-  for (const prov of PROVINCIAS_CONOCIDAS) {
-    if (haystack.includes(prov)) return prov
+
+  // 2. PostalAddress del organismo contratante
+  if (!provincia || !municipio) {
+    const party = ((cfs.LocatedContractingParty || {}).Party) || {}
+    const postal = party.PostalAddress || {}
+    procesarSubentity(getText(postal.CountrySubentity))
+    procesarSubentity(getText(postal.CityName))
   }
-  return null
+
+  // 3. Fallback: buscar provincia en título u organismo
+  if (!provincia) {
+    const haystack = `${titulo || ''} ${organismo || ''}`
+    for (const p of PROVINCIAS) {
+      if (haystack.toLowerCase().includes(p.toLowerCase())) {
+        provincia = p
+        break
+      }
+    }
+  }
+
+  return { provincia, municipio }
 }
 
 function parseEntry(entry) {
@@ -157,19 +203,71 @@ function parseEntry(entry) {
       importe: getFloat(budget.TaxExclusiveAmount),
       fechaLimite: getText(deadline.EndDate) || null,
       cpv: getCPVFromClassification(proj.RequiredCommodityClassification),
+      tipoContrato: getText(proj.TypeCode) || null,
       enlace: getLink(entry.link, getText(entry.id)),
       expediente: getText(cfs.ContractFolderID),
       fechaPublicacion: getText(entry.updated) || getText(entry.published) || null,
-      provincia: extraerProvincia(cfs, titulo, organismo),
+      ...extraerUbicacion(cfs, titulo, organismo),
     }
   } catch {
     return null
   }
 }
 
-function esConstruccion(cpv) {
+// ─── Filtros de obra real ──────────────────────────────────────────────────────
+
+// F1: El CPV principal (primer código) debe empezar por 45
+function filtro1_cpvPrincipal(cpv) {
   if (!cpv) return false
-  return String(cpv).split(/\s+/).some(c => c.trim().startsWith('45'))
+  const principal = String(cpv).trim().split(/\s+/)[0]
+  return principal.startsWith('45')
+}
+
+// F2: Tipo de contrato — descartar servicios y suministros si el campo existe
+const TIPOS_DESCARTADOS = new Set(['SE', 'SU', '2', '3', 'SERV', 'SER', 'SUB'])
+const TIPOS_OBRA = new Set(['1', 'OB', 'OBRA'])
+function filtro2_tipoContrato(tipoContrato) {
+  if (!tipoContrato) return true
+  const t = String(tipoContrato).toUpperCase().trim()
+  if (TIPOS_OBRA.has(t)) return true
+  if (TIPOS_DESCARTADOS.has(t)) return false
+  return true
+}
+
+// F3: Palabras clave en el título que delatan servicios/suministros disfrazados
+const KEYWORDS_DESCARTAR = [
+  'socorrismo', 'seguridad y salud', 'coordinación de seguridad',
+  'servicio de limpieza', 'servicio de mantenimiento',
+  'servicio de vigilancia', 'servicios de vigilancia',
+  'arrendamiento de maquinaria', 'alquiler de maquinaria',
+  'suministro de', 'servicio de prevención',
+  'redacción de proyecto', 'redacción del proyecto',
+  'asistencia técnica', 'consultoría', 'supervisión de obra',
+  'dirección de obra', 'control de calidad',
+  'servicios de apoyo', 'apoyo técnico',
+]
+function filtro3_titulo(titulo) {
+  if (!titulo) return true
+  const t = titulo.toLowerCase()
+  return !KEYWORDS_DESCARTAR.some(kw => t.includes(kw))
+}
+
+// F4: Ratio CPV — si hay más de 5 códigos y solo 1 es 45 → probablemente servicio
+function filtro4_ratioCPV(cpv) {
+  if (!cpv) return true
+  const codigos = String(cpv).trim().split(/\s+/)
+  if (codigos.length <= 5) return true
+  const count45 = codigos.filter(c => c.startsWith('45')).length
+  return count45 > 1
+}
+
+function esObraConstruccionReal(l) {
+  return (
+    filtro1_cpvPrincipal(l.cpv) &&
+    filtro2_tipoContrato(l.tipoContrato) &&
+    filtro3_titulo(l.titulo) &&
+    filtro4_ratioCPV(l.cpv)
+  )
 }
 
 function enPlazo(fechaLimite) {
@@ -214,7 +312,7 @@ function filtrar(entries) {
   return entries
     .map(parseEntry)
     .filter(Boolean)
-    .filter(l => esConstruccion(l.cpv) && enPlazo(l.fechaLimite))
+    .filter(l => esObraConstruccionReal(l) && enPlazo(l.fechaLimite))
 }
 
 function ordenar(lista) {

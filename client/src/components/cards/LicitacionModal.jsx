@@ -86,7 +86,6 @@ export default function LicitacionModal({ licitacion: l, onCerrar }) {
   const dias = diasRestantes(l.fechaLimite)
   const importeNum = formatImporte(l.importe)
   const tieneEnlace = l.enlace && l.enlace !== '#'
-  const provincia = l.provincia || 'España'
 
   return (
     <AnimatePresence>
@@ -192,7 +191,8 @@ export default function LicitacionModal({ licitacion: l, onCerrar }) {
 
           {/* Grid de campos */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-            <Campo icon={<MapPin size={11}/>} label="Provincia" value={provincia} />
+            <Campo icon={<MapPin size={11}/>} label="Municipio" value={l.municipio || '—'} />
+            <Campo icon={<MapPin size={11}/>} label="Provincia" value={l.provincia || '—'} />
             <Campo icon={<Calendar size={11}/>} label="Fecha límite" value={formatFecha(l.fechaLimite)} />
             <Campo icon={<HardHat size={11}/>} label="Tipo de obra" value={descripcionCPV(l.cpv)} colSpan />
             <Campo icon={<FileText size={11}/>} label="Expediente" value={l.expediente} colSpan mono />

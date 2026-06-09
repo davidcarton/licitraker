@@ -73,6 +73,11 @@ function descripcionCPV(cpvStr) {
 
 // ─── Tarjeta HTML ──────────────────────────────────────────────────────────────
 
+function ubicacionTexto(l) {
+  if (l.municipio && l.provincia) return `${l.municipio} · ${l.provincia}`
+  return l.municipio || l.provincia || 'España'
+}
+
 function crearTarjetaHTML(l) {
   const badge = badgeUrgencia(l.fechaLimite)
   const cpvPrincipal = l.cpv
@@ -107,6 +112,10 @@ function crearTarjetaHTML(l) {
       <div class="card-datum">
         <span class="label">📅 Fecha límite</span>
         <span class="val">${esc(formatearFecha(l.fechaLimite))}</span>
+      </div>
+      <div class="card-datum">
+        <span class="label">📍 Ubicación</span>
+        <span class="val">${esc(ubicacionTexto(l))}</span>
       </div>
       <div class="card-datum">
         <span class="label">🏗 Tipo</span>
