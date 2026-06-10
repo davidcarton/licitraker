@@ -1,83 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LicitaPlus — Licitaciones de obra pública</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-  <!-- HEADER -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo-area">
-        <svg class="logo-hex" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <polygon points="30,2 58,17 58,53 30,68 2,53 2,17" fill="#3D7A4F" stroke="#2A5938" stroke-width="2"/>
-          <text x="30" y="42" text-anchor="middle" fill="white" font-size="20" font-weight="bold" font-family="system-ui">L+</text>
-        </svg>
-        <div class="logo-text">
-          <span class="logo-main">LicitaPlus</span>
-          <span class="logo-sub">Licitaciones de obra pública · En tiempo real</span>
-        </div>
-      </div>
-      <div class="header-right">
-        <span class="badge-live">
-          <span class="dot-pulse"></span>
-          EN DIRECTO
-        </span>
-        <p class="header-source">Datos oficiales del Gobierno de España</p>
-      </div>
-    </div>
-  </header>
-
-  <!-- FILTROS -->
-  <section class="filters-bar">
-    <div class="filters-inner">
-      <input
-        type="text"
-        id="filtro-texto"
-        class="filter-input"
-        placeholder="Buscar por nombre u organismo..."
-        autocomplete="off"
-      />
-      <select id="filtro-importe" class="filter-select">
-        <option value="">Todos los importes</option>
-        <option value="menos50">Menos de 50.000 €</option>
-        <option value="50a200">De 50.000 € a 200.000 €</option>
-        <option value="200a1000">De 200.000 € a 1.000.000 €</option>
-        <option value="mas1000">Más de 1.000.000 €</option>
-      </select>
-      <button id="btn-actualizar" class="btn-primary">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-        ↻ Actualizar
-      </button>
-    </div>
-  </section>
-
-  <!-- CONTADOR -->
-  <div class="counter-bar">
-    <span id="contador-texto">Cargando licitaciones...</span>
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
-    <div id="spinner" class="spinner-wrapper">
-      <div class="spinner"></div>
-      <p class="spinner-text">Consultando licitaciones...<br><small>Conectando con la Plataforma de Contratación del Sector Público</small></p>
-    </div>
-    <div id="error-box" class="error-box" style="display:none"></div>
-    <div id="grid-licitaciones" class="cards-grid"></div>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <p>Datos extraídos de la <strong>Plataforma de Contratación del Sector Público (PLACSP)</strong> · Ministerio de Hacienda · Gobierno de España</p>
-      <p>LicitaPlus · Un servicio de <strong>Benco</strong> · benco.es</p>
-    </div>
-  </footer>
-
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LicitaPlus — Licitaciones de obra pública en tiempo real</title>
+    <meta name="description" content="Licitaciones de construcción del sector público español en tiempo real. Datos oficiales de PLACSP." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="/assets/index-Bm6Md2Ky.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DmQoiLEQ.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

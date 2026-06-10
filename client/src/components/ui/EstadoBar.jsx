@@ -17,6 +17,9 @@ export default function EstadoBar({ total, actualizacion, proximaActualizacion }
       justifyContent: 'space-between',
       flexWrap: 'wrap',
       gap: 8,
+      position: 'sticky',
+      top: '58px',
+      zIndex: 49,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <Building2 size={14} color="#7FC99A" />
