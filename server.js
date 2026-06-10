@@ -312,6 +312,25 @@ cron.schedule('0 7 * * 6', () => {
   descargarYProcesar()
 }, { timezone: 'Europe/Madrid' })
 
+cron.schedule('0 * * * *', () => {
+  if (!cache.datos) return
+
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+
+  const antes = cache.datos.length
+
+  cache.datos = cache.datos.filter(l => {
+    if (!l.fechaLimite) return true
+    return new Date(l.fechaLimite + 'T00:00:00') >= hoy
+  })
+
+  const eliminadas = antes - cache.datos.length
+  if (eliminadas > 0) {
+    console.log(`[cache] Limpieza horaria: ${eliminadas} licitaciones expiradas eliminadas. Quedan ${cache.datos.length}.`)
+  }
+}, { timezone: 'Europe/Madrid' })
+
 // ─── Endpoints ─────────────────────────────────────────────────────────────────
 
 app.get('/api/licitaciones', async (req, res) => {
