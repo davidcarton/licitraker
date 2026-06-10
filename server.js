@@ -184,7 +184,7 @@ function extraerUbicacion(cfs, titulo, organismo) {
   return { provincia, municipio }
 }
 
-function parseEntry(entry) {
+function extraerDatos(entry) {
   try {
     const cfs = entry.ContractFolderStatus
     if (!cfs) return null
@@ -215,42 +215,38 @@ function parseEntry(entry) {
   }
 }
 
-// ─── Filtro de obra real ───────────────────────────────────────────────────────
+// ─── Filtros de obra ────────────────────────────────────────────────────────────
 
 // TypeCode (valores reales observados en el feed PLACSP):
 // 1=Suministros, 2=Servicios, 3=Obras, 8=Desconocido,
 // 22=Concesión de servicios, 50=Concesión mixta
-const TIPOS_OBRA = new Set(['3'])
-const TIPOS_EXCLUIR_SIEMPRE = new Set(['1', '22'])
-const TIPOS_CON_EXCEPCION_CPV45 = new Set(['2', '50'])
-
-// CPV principal = primer código de la lista
-function cpvPrincipalEs45(cpv) {
+function tieneCPV45(entry) {
+  const proj = entry?.ContractFolderStatus?.ProcurementProject
+  const cpv = getCPVFromClassification(proj?.RequiredCommodityClassification)
   if (!cpv) return false
-  const principal = String(cpv).trim().split(/\s+/)[0]
-  return principal.startsWith('45')
+  return cpv.split(/\s+/).some(c => c.startsWith('45'))
 }
 
-// Excepción para contratos mixtos: algún CPV (no necesariamente el principal) es 45
-function algunCPVEs45(cpv) {
-  if (!cpv) return false
-  return String(cpv).trim().split(/\s+/).some(c => c.startsWith('45'))
+// FILTRO 1 — Es una obra
+function esObra(entry) {
+  const typeCode = getText(entry?.ContractFolderStatus?.ProcurementProject?.TypeCode) || ''
+
+  if (typeCode === '3') return true               // Obras puras
+  if (typeCode === '1' || typeCode === '22') return false // Suministros / concesión servicios
+
+  // '2' (servicios), '50' (concesión mixta), '8' (desconocido), '' (sin tipo)
+  // y cualquier otro código no contemplado → incluir solo si hay CPV 45
+  return tieneCPV45(entry)
 }
 
-function esObraConstruccionReal(l) {
-  const tipo = l.tipoContrato ? String(l.tipoContrato).trim() : null
-
-  if (tipo === '3') return true
-  if (TIPOS_EXCLUIR_SIEMPRE.has(tipo)) return false
-  if (TIPOS_CON_EXCEPCION_CPV45.has(tipo)) return algunCPVEs45(l.cpv)
-
-  // TypeCode '8', vacío o desconocido → fallback por CPV principal
-  return cpvPrincipalEs45(l.cpv)
-}
-
-function enPlazo(fechaLimite) {
+// FILTRO 2 — Está en vigor hoy
+function estaEnPlazo(entry) {
+  const fechaLimite = getText(entry?.ContractFolderStatus?.TenderingProcess?.TenderSubmissionDeadlinePeriod?.EndDate)
   if (!fechaLimite) return true
-  return new Date(fechaLimite) > new Date()
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const limite = new Date(fechaLimite + 'T00:00:00')
+  return limite >= hoy
 }
 
 async function descargarYParsear(url) {
@@ -288,9 +284,9 @@ function encontrarSiguienteURL(result) {
 
 function filtrar(entries) {
   return entries
-    .map(parseEntry)
+    .filter(entry => esObra(entry) && estaEnPlazo(entry))
+    .map(extraerDatos)
     .filter(Boolean)
-    .filter(l => esObraConstruccionReal(l) && enPlazo(l.fechaLimite))
 }
 
 function ordenar(lista) {
@@ -302,26 +298,45 @@ function ordenar(lista) {
   })
 }
 
+// ─── Paginación del feed ───────────────────────────────────────────────────────
+
+const MAX_PAGINAS = 10
+const MIN_OBRAS_EN_PLAZO = 200
+
+async function descargarTodasLicitaciones() {
+  let todasEntradas = []
+  let url = ATOM_URL
+  let paginas = 0
+
+  while (url && paginas < MAX_PAGINAS) {
+    let result
+    try {
+      result = await descargarYParsear(url)
+    } catch (e) {
+      console.warn(`[placsp] Error en página ${paginas + 1}:`, e.message)
+      break
+    }
+
+    todasEntradas = todasEntradas.concat(extraerEntradas(result))
+    paginas++
+
+    const obrasEnPlazo = todasEntradas.filter(entry => esObra(entry) && estaEnPlazo(entry))
+    if (obrasEnPlazo.length >= MIN_OBRAS_EN_PLAZO) break
+
+    url = encontrarSiguienteURL(result)
+    if (url) await new Promise(r => setTimeout(r, 500))
+  }
+
+  return todasEntradas
+}
+
 // ─── Descarga principal ────────────────────────────────────────────────────────
 
 async function descargarYProcesar() {
   try {
     console.log('[placsp] Descargando ATOM...')
-    const result = await descargarYParsear(ATOM_URL)
-    let licitaciones = filtrar(extraerEntradas(result))
-
-    if (licitaciones.length < 10) {
-      const nextURL = encontrarSiguienteURL(result)
-      if (nextURL) {
-        try {
-          const result2 = await descargarYParsear(nextURL)
-          const mas = filtrar(extraerEntradas(result2))
-          licitaciones = [...licitaciones, ...mas]
-        } catch (e) {
-          console.warn('[placsp] Error cargando página siguiente:', e.message)
-        }
-      }
-    }
+    const entradas = await descargarTodasLicitaciones()
+    const licitaciones = filtrar(entradas)
 
     const ahora = new Date()
     cache.datos = ordenar(licitaciones)
