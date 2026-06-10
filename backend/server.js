@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const express = require('express')
 const axios = require('axios')
 const xml2js = require('xml2js')
@@ -7,9 +9,16 @@ const os = require('os')
 const path = require('path')
 const cron = require('node-cron')
 
+const authRoutes = require('./src/routes/auth')
+const licitacionesRoutes = require('./src/routes/licitaciones')
+
 const app = express()
 app.use(cors())
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, '..', 'public')))
+
+app.use(express.json())
+app.use('/api/auth', authRoutes)
+app.use('/api/licitaciones-guardadas', licitacionesRoutes)
 
 const ATOM_URL = 'https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom'
 
@@ -372,7 +381,7 @@ app.get('/api/estado', (req, res) => {
 // ─── Servir frontend React (build de producción) ──────────────────────────────
 // Ejecutar: cd client && npm run build — y luego node server.js sirve todo en :3000
 
-const clientDist = path.join(__dirname, 'client', 'dist')
+const clientDist = path.join(__dirname, '..', 'client', 'dist')
 const fs = require('fs')
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist))
@@ -383,7 +392,7 @@ if (fs.existsSync(clientDist)) {
 
 // ─── Arranque ──────────────────────────────────────────────────────────────────
 
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\nLicitaPlus corriendo en http://localhost:${PORT}`)
 

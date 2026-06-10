@@ -1,0 +1,38 @@
+version: '3.8'
+
+networks:
+  licitaplus-net:
+    name: licitaplus-net
+    driver: bridge
+
+services:
+  licitaplus-db:
+    image: postgres:16
+    restart: always
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - 5433:5432
+    volumes:
+      - licitaplus-pgdata:/var/lib/postgresql/data
+    networks:
+      - licitaplus-net
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - licitaplus-db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: "8080"
+    ports:
+      - "8082:8080"
+    networks:
+      - licitaplus-net
+
+volumes:
+  licitaplus-pgdata:
