@@ -10,7 +10,8 @@ function fmtHora(iso) {
 export default function EstadoBar({ total, actualizacion, proximaActualizacion }) {
   return (
     <div style={{
-      background: 'var(--g800)',
+      backgroundColor: 'var(--g800)',
+      backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 7px, transparent 7px, transparent 22px)',
       padding: '8px clamp(1.25rem, 4vw, 2.5rem)',
       display: 'flex',
       alignItems: 'center',

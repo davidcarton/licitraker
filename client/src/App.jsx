@@ -15,21 +15,9 @@ import FiltroBarra from './components/ui/FiltroBarra.jsx'
 import LicitacionCard from './components/cards/LicitacionCard.jsx'
 import LicitacionModal from './components/cards/LicitacionModal.jsx'
 import Spinner from './components/ui/Spinner.jsx'
+import BlueprintFrame from './components/ui/BlueprintFrame.jsx'
+import { tipoBadge } from './utils/format.js'
 import './styles/global.css'
-
-function diasRestantes(fechaStr) {
-  if (!fechaStr) return null
-  const hoy = new Date(); hoy.setHours(0,0,0,0)
-  return Math.ceil((new Date(fechaStr + 'T00:00:00') - hoy) / (1000*60*60*24))
-}
-
-function tipoBadge(fechaStr) {
-  const d = diasRestantes(fechaStr)
-  if (d === null) return 'sinplazo'
-  if (d < 7) return 'urgente'
-  if (d <= 14) return 'proximo'
-  return 'enplazo'
-}
 
 export default function App() {
   const [licitaciones, setLicitaciones] = useState([])
@@ -136,7 +124,9 @@ export default function App() {
               padding: '16px 20px',
               display: 'flex', alignItems: 'center', gap: 10,
             }}>
-              <WifiOff size={18} color="var(--rojo)" style={{ flexShrink: 0 }} />
+              <BlueprintFrame size={36} color="var(--rojo-borde)">
+                <WifiOff size={16} color="var(--rojo)" />
+              </BlueprintFrame>
               <span style={{ fontSize: 13, color: 'var(--rojo)', fontWeight: 500 }}>
                 No se ha podido conectar con el servidor de licitaciones.
                 Asegúrate de que el servidor está arrancado e inténtalo de nuevo.
@@ -151,7 +141,9 @@ export default function App() {
               alignItems: 'center', justifyContent: 'center',
               gap: 12,
             }}>
-              <SearchX size={40} color="var(--n100)" />
+              <BlueprintFrame size={96}>
+                <SearchX size={36} color="var(--n300)" />
+              </BlueprintFrame>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--n500)' }}>
                 No hay licitaciones con estos filtros
               </span>

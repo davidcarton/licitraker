@@ -4,46 +4,7 @@ import {
   ExternalLink, Shield, HardHat, Info, TrendingUp,
 } from 'lucide-react'
 import Badge from '../ui/Badge.jsx'
-
-function diasRestantes(fechaStr) {
-  if (!fechaStr) return null
-  const hoy = new Date(); hoy.setHours(0,0,0,0)
-  return Math.ceil((new Date(fechaStr + 'T00:00:00') - hoy) / (1000*60*60*24))
-}
-
-function tipoBadge(fechaStr) {
-  const d = diasRestantes(fechaStr)
-  if (d === null) return 'sinplazo'
-  if (d < 7) return 'urgente'
-  if (d <= 14) return 'proximo'
-  return 'enplazo'
-}
-
-function formatFecha(fechaStr) {
-  if (!fechaStr) return 'Sin plazo'
-  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
-  const d = new Date(fechaStr)
-  if (isNaN(d)) return fechaStr
-  return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`
-}
-
-function formatImporte(valor) {
-  if (!valor && valor !== 0) return null
-  const n = parseFloat(valor)
-  if (isNaN(n)) return null
-  return n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-}
-
-function descripcionCPV(cpvStr) {
-  if (!cpvStr) return 'Obra de construcción'
-  const p = String(cpvStr).split(/\s+/).find(c => c.startsWith('45')) || ''
-  const t = {
-    '450':'Construcción general','451':'Demolición y preparación del terreno',
-    '452':'Ingeniería civil','453':'Instalaciones en edificios',
-    '454':'Acabados de construcción','455':'Alquiler de maquinaria de construcción',
-  }
-  return t[p.substring(0,3)] || 'Obra de construcción'
-}
+import { diasRestantes, tipoBadge, formatFecha, formatImporte, descripcionCPV } from '../../utils/format.js'
 
 const franjaColor = {
   urgente: 'var(--rojo)',
@@ -70,7 +31,7 @@ function Campo({ icon, label, value, colSpan, mono }) {
       <div style={{
         marginTop: 4,
         fontSize: 13, fontWeight: 500, color: 'var(--n700)',
-        fontFamily: mono ? 'ui-monospace, monospace' : undefined,
+        fontFamily: mono ? 'var(--font-mono)' : undefined,
         fontSize: mono ? 12 : 13,
         wordBreak: 'break-word',
       }}>
@@ -193,7 +154,7 @@ export default function LicitacionModal({ licitacion: l, onCerrar }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
             <Campo icon={<MapPin size={11}/>} label="Municipio" value={l.municipio || 'No especificado'} />
             <Campo icon={<MapPin size={11}/>} label="Provincia" value={l.provincia || 'España'} />
-            <Campo icon={<Calendar size={11}/>} label="Fecha límite" value={formatFecha(l.fechaLimite)} />
+            <Campo icon={<Calendar size={11}/>} label="Fecha límite" value={formatFecha(l.fechaLimite) || 'Sin plazo'} />
             <Campo icon={<HardHat size={11}/>} label="Tipo de obra" value={descripcionCPV(l.cpv)} colSpan />
             <Campo icon={<FileText size={11}/>} label="Expediente" value={l.expediente} colSpan mono />
             <Campo icon={<Tag size={11}/>} label="Código CPV" value={l.cpv} colSpan mono />
