@@ -61,6 +61,7 @@ function getText(val) {
   if (typeof val === 'object') {
     if (val['#text']) return String(val['#text']).trim()
     if (val._) return String(val._).trim()
+    if (val.InnerText) return String(val.InnerText).trim()
   }
   return null
 }
@@ -216,11 +217,12 @@ function parseEntry(entry) {
 
 // ─── Filtro de obra real ───────────────────────────────────────────────────────
 
-// TypeCode (CODICE): 1=Obras, 2=Servicios, 3=Suministros,
-// 4=Concesión de obras, 5=Concesión de servicios, 21=Servicios
-const TIPOS_OBRA = new Set(['1', '4'])
-const TIPOS_SUMINISTROS = new Set(['3'])
-const TIPOS_SERVICIOS_CON_EXCEPCION = new Set(['2', '5', '21'])
+// TypeCode (valores reales observados en el feed PLACSP):
+// 1=Suministros, 2=Servicios, 3=Obras, 8=Desconocido,
+// 22=Concesión de servicios, 50=Concesión mixta
+const TIPOS_OBRA = new Set(['3'])
+const TIPOS_EXCLUIR_SIEMPRE = new Set(['1', '22'])
+const TIPOS_CON_EXCEPCION_CPV45 = new Set(['2', '50'])
 
 // CPV principal = primer código de la lista
 function cpvPrincipalEs45(cpv) {
@@ -238,11 +240,11 @@ function algunCPVEs45(cpv) {
 function esObraConstruccionReal(l) {
   const tipo = l.tipoContrato ? String(l.tipoContrato).trim() : null
 
-  if (tipo && TIPOS_OBRA.has(tipo)) return true
-  if (tipo && TIPOS_SUMINISTROS.has(tipo)) return false
-  if (tipo && TIPOS_SERVICIOS_CON_EXCEPCION.has(tipo)) return algunCPVEs45(l.cpv)
+  if (tipo === '3') return true
+  if (TIPOS_EXCLUIR_SIEMPRE.has(tipo)) return false
+  if (TIPOS_CON_EXCEPCION_CPV45.has(tipo)) return algunCPVEs45(l.cpv)
 
-  // Sin TypeCode o tipo desconocido → fallback por CPV principal
+  // TypeCode '8', vacío o desconocido → fallback por CPV principal
   return cpvPrincipalEs45(l.cpv)
 }
 
