@@ -104,84 +104,28 @@ function getCPVFromClassification(classification) {
   return codes.length > 0 ? codes.join(' ') : null
 }
 
-const PROVINCIAS = new Set([
-  'Álava','Albacete','Alicante','Almería','Asturias','Ávila','Badajoz','Barcelona',
-  'Burgos','Cáceres','Cádiz','Cantabria','Castellón','Ciudad Real','Córdoba',
-  'Cuenca','Gerona','Granada','Guadalajara','Guipúzcoa','Huelva','Huesca',
-  'Jaén','La Rioja','Las Palmas','León','Lérida','Lugo','Madrid','Málaga',
-  'Murcia','Navarra','Ourense','Palencia','Pontevedra','Salamanca','Segovia',
-  'Sevilla','Soria','Tarragona','Santa Cruz de Tenerife','Teruel','Toledo',
-  'Valencia','Valladolid','Vizcaya','Zamora','Zaragoza','Ceuta','Melilla',
-  'A Coruña','Islas Baleares',
-])
+function extraerUbicacion(entry) {
+  const loc = entry?.ContractFolderStatus?.ProcurementProject?.RealizedLocation
 
-function normalizar(s) {
-  return s ? s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim() : ''
-}
-
-function esProvincia(s) {
-  const n = normalizar(s)
-  for (const p of PROVINCIAS) {
-    if (normalizar(p) === n) return true
-  }
-  return false
-}
-
-function canonizarProvincia(s) {
-  const n = normalizar(s)
-  for (const p of PROVINCIAS) {
-    if (normalizar(p) === n) return p
-  }
-  return s ? s.trim() : null
-}
-
-function toTitleCase(s) {
-  if (!s) return null
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
-}
-
-function extraerUbicacion(cfs, titulo, organismo) {
-  let provincia = null
-  let municipio = null
-
-  function procesarSubentity(val) {
-    if (!val) return
-    if (esProvincia(val)) {
-      if (!provincia) provincia = canonizarProvincia(val)
-    } else {
-      if (!municipio) municipio = toTitleCase(val)
-    }
+  // Provincia: RealizedLocation.CountrySubentity (limpiar variantes bilingües "Valencia/València")
+  let provincia = getText(loc?.CountrySubentity) || ''
+  if (provincia.includes('/')) {
+    provincia = provincia.split('/')[0].trim()
   }
 
-  // 1. RealizedLocation del proyecto
-  const proj = cfs.ProcurementProject || {}
-  const loc = proj.RealizedLocation
-  if (loc) {
-    const addr = loc.Address || {}
-    procesarSubentity(getText(addr.CountrySubentity))
-    procesarSubentity(getText(addr.CityName))
+  // Municipio: RealizedLocation.Address.CityName
+  let municipio = getText(loc?.Address?.CityName) || ''
+  if (municipio === municipio.toUpperCase() && municipio.length > 0) {
+    municipio = municipio.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    municipio = municipio.replace(/\b(De|Del|La|Los|Las|El|Y)\b/g, m => m.toLowerCase())
   }
 
-  // 2. PostalAddress del organismo contratante
-  if (!provincia || !municipio) {
-    const party = ((cfs.LocatedContractingParty || {}).Party) || {}
-    const postal = party.PostalAddress || {}
-    procesarSubentity(getText(postal.CountrySubentity))
-    procesarSubentity(getText(postal.CityName))
+  // Si municipio y provincia coinciden, mostrar solo provincia
+  if (municipio.toLowerCase() === provincia.toLowerCase()) {
+    municipio = ''
   }
 
-  // 3. Fallback: buscar provincia en título u organismo
-  if (!provincia) {
-    const haystack = `${titulo || ''} ${organismo || ''}`
-    for (const p of PROVINCIAS) {
-      if (haystack.toLowerCase().includes(p.toLowerCase())) {
-        provincia = p
-        break
-      }
-    }
-  }
-
-  return { provincia, municipio }
+  return { provincia: provincia || null, municipio: municipio || null }
 }
 
 function extraerDatos(entry) {
@@ -208,7 +152,7 @@ function extraerDatos(entry) {
       enlace: getLink(entry.link, getText(entry.id)),
       expediente: getText(cfs.ContractFolderID),
       fechaPublicacion: getText(entry.updated) || getText(entry.published) || null,
-      ...extraerUbicacion(cfs, titulo, organismo),
+      ...extraerUbicacion(entry),
     }
   } catch {
     return null

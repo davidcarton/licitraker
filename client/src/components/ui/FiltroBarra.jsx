@@ -1,4 +1,4 @@
-import { Search, RefreshCw, AlertCircle, Banknote, ChevronDown } from 'lucide-react'
+import { Search, RefreshCw, AlertCircle, Banknote, ChevronDown, MapPin } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 const inputBase = {
@@ -44,11 +44,12 @@ function useFocusStyle() {
   }
 }
 
-export default function FiltroBarra({ onBuscar, onFiltroUrgencia, onFiltroImporte, onActualizar, cargando }) {
+export default function FiltroBarra({ onBuscar, onFiltroUrgencia, onFiltroImporte, onFiltroProvincia, provincias = [], onActualizar, cargando }) {
   const debounce = useRef(null)
   const searchFocus = useFocusStyle()
   const urgFocus = useFocusStyle()
   const impFocus = useFocusStyle()
+  const provFocus = useFocusStyle()
 
   function handleTexto(e) {
     clearTimeout(debounce.current)
@@ -115,6 +116,21 @@ export default function FiltroBarra({ onBuscar, onFiltroUrgencia, onFiltroImport
             <option value="50a200">50.000 € — 200.000 €</option>
             <option value="200a1m">200.000 € — 1.000.000 €</option>
             <option value="mas1m">Más de 1.000.000 €</option>
+          </select>
+        </FilterWrapper>
+
+        {/* Select provincia */}
+        <FilterWrapper icon={<MapPin size={14} />}>
+          <select
+            style={{ ...inputBase, minWidth: 200, paddingRight: 30, cursor: 'pointer', ...provFocus.style }}
+            onChange={e => onFiltroProvincia(e.target.value)}
+            onFocus={provFocus.onFocus}
+            onBlur={provFocus.onBlur}
+          >
+            <option value="">Todas las provincias</option>
+            {provincias.map(p => (
+              <option key={p} value={p}>{p}</option>
+            ))}
           </select>
         </FilterWrapper>
 

@@ -41,6 +41,7 @@ export default function App() {
   const [textoBusqueda, setTextoBusqueda] = useState('')
   const [filtroUrgencia, setFiltroUrgencia] = useState('')
   const [filtroImporte, setFiltroImporte] = useState('')
+  const [filtroProvincia, setFiltroProvincia] = useState('')
 
   const cargar = useCallback(async (forzar = false) => {
     setCargando(true)
@@ -59,6 +60,14 @@ export default function App() {
   }, [])
 
   useEffect(() => { cargar() }, [cargar])
+
+  const provincias = useMemo(() => {
+    return [...new Set(
+      licitaciones
+        .map(l => l.provincia)
+        .filter(Boolean)
+    )].sort()
+  }, [licitaciones])
 
   const licitacionesFiltradas = useMemo(() => {
     return licitaciones.filter(l => {
@@ -79,9 +88,10 @@ export default function App() {
         if (filtroImporte === '200a1m'  && (imp < 200000 || imp >= 1000000)) return false
         if (filtroImporte === 'mas1m'   && imp < 1000000) return false
       }
+      if (filtroProvincia && l.provincia !== filtroProvincia) return false
       return true
     })
-  }, [licitaciones, textoBusqueda, filtroUrgencia, filtroImporte])
+  }, [licitaciones, textoBusqueda, filtroUrgencia, filtroImporte, filtroProvincia])
 
   // Offset: header (58px) + estadoBar (~36px) = 94px
   const HEADER_H = 58
@@ -105,6 +115,8 @@ export default function App() {
             onBuscar={setTextoBusqueda}
             onFiltroUrgencia={setFiltroUrgencia}
             onFiltroImporte={setFiltroImporte}
+            onFiltroProvincia={setFiltroProvincia}
+            provincias={provincias}
             onActualizar={() => cargar(true)}
             cargando={cargando}
           />

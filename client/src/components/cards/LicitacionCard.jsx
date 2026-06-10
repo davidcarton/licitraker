@@ -81,9 +81,10 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
   const dias = diasRestantes(l.fechaLimite)
   const importeNum = formatImporte(l.importe)
   const tieneEnlace = l.enlace && l.enlace !== '#'
-  const ubicacion = l.municipio && l.provincia
-    ? `${l.municipio} · ${l.provincia}`
-    : l.municipio || l.provincia || 'España'
+  const ubicacionPartes = []
+  if (l.municipio) ubicacionPartes.push(l.municipio)
+  if (l.provincia) ubicacionPartes.push(l.provincia)
+  const ubicacion = ubicacionPartes.join(' · ') || 'España'
 
   return (
     <article
