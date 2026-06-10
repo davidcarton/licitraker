@@ -214,60 +214,36 @@ function parseEntry(entry) {
   }
 }
 
-// ─── Filtros de obra real ──────────────────────────────────────────────────────
+// ─── Filtro de obra real ───────────────────────────────────────────────────────
 
-// F1: El CPV principal (primer código) debe empezar por 45
-function filtro1_cpvPrincipal(cpv) {
+// TypeCode (CODICE): 1=Obras, 2=Servicios, 3=Suministros,
+// 4=Concesión de obras, 5=Concesión de servicios, 21=Servicios
+const TIPOS_OBRA = new Set(['1', '4'])
+const TIPOS_SUMINISTROS = new Set(['3'])
+const TIPOS_SERVICIOS_CON_EXCEPCION = new Set(['2', '5', '21'])
+
+// CPV principal = primer código de la lista
+function cpvPrincipalEs45(cpv) {
   if (!cpv) return false
   const principal = String(cpv).trim().split(/\s+/)[0]
   return principal.startsWith('45')
 }
 
-// F2: Tipo de contrato — descartar servicios y suministros si el campo existe
-const TIPOS_DESCARTADOS = new Set(['SE', 'SU', '2', '3', 'SERV', 'SER', 'SUB'])
-const TIPOS_OBRA = new Set(['1', 'OB', 'OBRA'])
-function filtro2_tipoContrato(tipoContrato) {
-  if (!tipoContrato) return true
-  const t = String(tipoContrato).toUpperCase().trim()
-  if (TIPOS_OBRA.has(t)) return true
-  if (TIPOS_DESCARTADOS.has(t)) return false
-  return true
-}
-
-// F3: Palabras clave en el título que delatan servicios/suministros disfrazados
-const KEYWORDS_DESCARTAR = [
-  'socorrismo', 'seguridad y salud', 'coordinación de seguridad',
-  'servicio de limpieza', 'servicio de mantenimiento',
-  'servicio de vigilancia', 'servicios de vigilancia',
-  'arrendamiento de maquinaria', 'alquiler de maquinaria',
-  'suministro de', 'servicio de prevención',
-  'redacción de proyecto', 'redacción del proyecto',
-  'asistencia técnica', 'consultoría', 'supervisión de obra',
-  'dirección de obra', 'control de calidad',
-  'servicios de apoyo', 'apoyo técnico',
-]
-function filtro3_titulo(titulo) {
-  if (!titulo) return true
-  const t = titulo.toLowerCase()
-  return !KEYWORDS_DESCARTAR.some(kw => t.includes(kw))
-}
-
-// F4: Ratio CPV — si hay más de 5 códigos y solo 1 es 45 → probablemente servicio
-function filtro4_ratioCPV(cpv) {
-  if (!cpv) return true
-  const codigos = String(cpv).trim().split(/\s+/)
-  if (codigos.length <= 5) return true
-  const count45 = codigos.filter(c => c.startsWith('45')).length
-  return count45 > 1
+// Excepción para contratos mixtos: algún CPV (no necesariamente el principal) es 45
+function algunCPVEs45(cpv) {
+  if (!cpv) return false
+  return String(cpv).trim().split(/\s+/).some(c => c.startsWith('45'))
 }
 
 function esObraConstruccionReal(l) {
-  return (
-    filtro1_cpvPrincipal(l.cpv) &&
-    filtro2_tipoContrato(l.tipoContrato) &&
-    filtro3_titulo(l.titulo) &&
-    filtro4_ratioCPV(l.cpv)
-  )
+  const tipo = l.tipoContrato ? String(l.tipoContrato).trim() : null
+
+  if (tipo && TIPOS_OBRA.has(tipo)) return true
+  if (tipo && TIPOS_SUMINISTROS.has(tipo)) return false
+  if (tipo && TIPOS_SERVICIOS_CON_EXCEPCION.has(tipo)) return algunCPVEs45(l.cpv)
+
+  // Sin TypeCode o tipo desconocido → fallback por CPV principal
+  return cpvPrincipalEs45(l.cpv)
 }
 
 function enPlazo(fechaLimite) {

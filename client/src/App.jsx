@@ -20,7 +20,7 @@ import './styles/global.css'
 function diasRestantes(fechaStr) {
   if (!fechaStr) return null
   const hoy = new Date(); hoy.setHours(0,0,0,0)
-  return Math.ceil((new Date(fechaStr) - hoy) / (1000*60*60*24))
+  return Math.ceil((new Date(fechaStr + 'T00:00:00') - hoy) / (1000*60*60*24))
 }
 
 function tipoBadge(fechaStr) {
@@ -62,6 +62,11 @@ export default function App() {
 
   const licitacionesFiltradas = useMemo(() => {
     return licitaciones.filter(l => {
+      // Filtrar expiradas en cliente
+      if (l.fechaLimite) {
+        const hoy = new Date(); hoy.setHours(0,0,0,0)
+        if (new Date(l.fechaLimite + 'T00:00:00') <= hoy) return false
+      }
       if (textoBusqueda) {
         const t = textoBusqueda.toLowerCase()
         if (!l.titulo?.toLowerCase().includes(t) && !l.organismo?.toLowerCase().includes(t)) return false

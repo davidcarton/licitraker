@@ -8,7 +8,7 @@ import Badge from '../ui/Badge.jsx'
 function diasRestantes(fechaStr) {
   if (!fechaStr) return null
   const hoy = new Date(); hoy.setHours(0,0,0,0)
-  return Math.ceil((new Date(fechaStr) - hoy) / (1000*60*60*24))
+  return Math.ceil((new Date(fechaStr + 'T00:00:00') - hoy) / (1000*60*60*24))
 }
 
 function tipoBadge(fechaStr) {
