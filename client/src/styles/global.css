@@ -1,3 +1,6 @@
+/* 1. Importar las fuentes desde Google Fonts (se añade al principio del archivo) */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Syne:wght@800&display=swap');
+
 :root {
   --g900: #1a3d28;
   --g800: #2A5938;
@@ -20,8 +23,9 @@
   --ambar-bg:    #fffbeb;
   --ambar-borde: #fde68a;
 
+  /* 2. Actualizamos las variables tipográficas */
   --font-display: 'Syne', sans-serif;
-  --font-body:    'Inter', sans-serif;
+  --font-body:    'DM Sans', sans-serif; /* 👈 Cambiado de 'Inter' a 'DM Sans' */
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
 
   --r-sm: 6px;
