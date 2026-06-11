@@ -1,7 +1,7 @@
 // DECISIONES DE DISEÑO
 // Arquetipo: SaaS datos públicos — claro, confiable, gubernamental pero moderno
 // Paleta: verde oscuro g900/g800 / fondo neutro n50 / blanco
-// Tipografía display: Syne 700/800 — cuerpo: Inter 400/600
+// Tipografía display: Syne 800 — cuerpo: DM Sans
 // Diferenciador visual: franja superior de color en tarjeta según urgencia
 //   + importe en Syne grande + badge días restantes compacto
 // CTA principal: "Ver licitación oficial" en tarjeta + modal drawer lateral
@@ -144,7 +144,7 @@ export default function App() {
               <BlueprintFrame size={96}>
                 <SearchX size={36} color="var(--n300)" />
               </BlueprintFrame>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--n500)' }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 800, color: 'var(--n500)' }}>
                 No hay licitaciones con estos filtros
               </span>
               <span style={{ fontSize: 13, color: 'var(--n300)' }}>

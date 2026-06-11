@@ -45,7 +45,7 @@ export default function Header() {
             style={{
               fontFamily: "var(--font-display)",
               fontSize: 17,
-              fontWeight: 700,
+              fontWeight: 800,
               color: "#fff",
               lineHeight: 1,
             }}

@@ -14,7 +14,7 @@ export default function Spinner() {
         animation: 'spin 0.8s linear infinite',
       }} />
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--n700)' }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, color: 'var(--n700)' }}>
           Consultando licitaciones...
         </span>
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--n300)' }}>
