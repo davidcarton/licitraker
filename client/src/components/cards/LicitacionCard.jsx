@@ -24,11 +24,10 @@ const barraColor = {
   sinplazo: "var(--n100)",
 };
 
-// ─── Sub-componente: celda de metadato ────────────────────────────────────────
+// --- Sub-componente: celda de metadato ────────────────────────────────────────
 
 function MetaCell({ icon, label, value, mono, gris }) {
   return (
-    // CAMBIO 1: Añadido minWidth: 0 para que Flexbox/Grid permita que el texto con ellipsis se encoja correctamente
     <div
       style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}
     >
@@ -42,6 +41,7 @@ function MetaCell({ icon, label, value, mono, gris }) {
           color: "var(--n300)",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
+          fontFamily: "var(--font-body)" /* Fuerza DM Sans */,
         }}
       >
         {icon}
@@ -51,12 +51,14 @@ function MetaCell({ icon, label, value, mono, gris }) {
         style={{
           fontWeight: 600,
           color: gris ? "var(--n300)" : "var(--n700)",
-          fontFamily: mono ? "var(--font-mono)" : undefined,
+          fontFamily: mono
+            ? "var(--font-mono)"
+            : "var(--font-body)" /* Fuerza DM Sans si no es mono */,
           fontSize: mono ? 11 : 13,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
-          width: "100%", // Asegura que ocupe el ancho de la celda para activar el truncado
+          width: "100%",
         }}
       >
         {value}
@@ -65,7 +67,7 @@ function MetaCell({ icon, label, value, mono, gris }) {
   );
 }
 
-// ─── Tarjeta ──────────────────────────────────────────────────────────────────
+// --- Tarjeta ──────────────────────────────────────────────────────────────────
 
 export default function LicitacionCard({ licitacion: l, onClick }) {
   const [hovered, setHovered] = useState(false);
@@ -96,10 +98,10 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
         transition:
           "transform var(--transition), box-shadow var(--transition), border-color var(--transition)",
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        // CAMBIO 2: Definir un ancho máximo o fijo para la tarjeta para que el contenedor grid/flex general no se rompa
         width: "100%",
-        maxWidth: "380px", // Ajusta este valor al tamaño que quieras que tengan tus tarjetas en el dashboard
+        maxWidth: "380px",
         boxSizing: "border-box",
+        fontFamily: "var(--font-body)" /* Fuerza DM Sans en la base */,
       }}
     >
       {/* Franja lateral de color */}
@@ -113,7 +115,6 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
       />
 
       {/* Cuerpo */}
-      {/* CAMBIO 3: Añadido minWidth: 0 al cuerpo. Es un comportamiento requerido en Flexbox para que los hijos con text-overflow funcionen */}
       <div
         style={{
           padding: "18px 20px 16px",
@@ -139,7 +140,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
                 style={{
                   fontFamily: "var(--font-display)",
                   fontSize: 20,
-                  fontWeight: 700,
+                  fontWeight: 800 /* Modificado para Syne 800 */,
                   color: "var(--g700)",
                   lineHeight: 1,
                 }}
@@ -152,6 +153,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
                   fontSize: 13,
                   color: "var(--n300)",
                   fontStyle: "italic",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Consultar
@@ -165,7 +167,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
           style={{
             fontFamily: "var(--font-display)",
             fontSize: 15,
-            fontWeight: 700,
+            fontWeight: 800 /* Modificado para Syne 800 */,
             color: "var(--n900)",
             lineHeight: 1.35,
             marginTop: 12,
@@ -198,6 +200,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
               fontSize: 12,
               color: "var(--n500)",
               fontWeight: 500,
+              fontFamily: "var(--font-body)" /* Fuerza DM Sans */,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -272,7 +275,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
                 fontSize: 13,
                 fontWeight: 600,
                 transition: "background var(--transition)",
-                fontFamily: "var(--font-body)",
+                fontFamily: "var(--font-body)" /* Fuerza DM Sans */,
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "var(--g800)")
@@ -304,6 +307,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: "not-allowed",
+                fontFamily: "var(--font-body)" /* Fuerza DM Sans */,
               }}
             >
               Enlace no disponible
@@ -322,7 +326,13 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
           }}
         >
           <Clock size={10} color="var(--n100)" />
-          <span style={{ fontSize: 10, color: "var(--n300)" }}>
+          <span
+            style={{
+              fontSize: 10,
+              color: "var(--n300)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
             Publicado: {formatFecha(l.fechaPublicacion) || "—"}
           </span>
         </div>
