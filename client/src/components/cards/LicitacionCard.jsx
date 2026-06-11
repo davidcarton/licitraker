@@ -1,53 +1,82 @@
-import { useState } from 'react'
-import { Building2, MapPin, Calendar, Tag, FileText, ExternalLink, Clock } from 'lucide-react'
-import Badge from '../ui/Badge.jsx'
-import { diasRestantes, tipoBadge, formatFecha, formatImporte, descripcionCPV } from '../../utils/format.js'
+import { useState } from "react";
+import {
+  Building2,
+  MapPin,
+  Calendar,
+  Tag,
+  FileText,
+  ExternalLink,
+  Clock,
+} from "lucide-react";
+import Badge from "../ui/Badge.jsx";
+import {
+  diasRestantes,
+  tipoBadge,
+  formatFecha,
+  formatImporte,
+  descripcionCPV,
+} from "../../utils/format.js";
 
 const barraColor = {
-  urgente: 'var(--rojo)',
-  proximo: 'var(--ambar)',
-  enplazo: 'var(--g500)',
-  sinplazo: 'var(--n100)',
-}
+  urgente: "var(--rojo)",
+  proximo: "var(--ambar)",
+  enplazo: "var(--g500)",
+  sinplazo: "var(--n100)",
+};
 
 // ─── Sub-componente: celda de metadato ────────────────────────────────────────
 
 function MetaCell({ icon, label, value, mono, gris }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 4,
-        fontSize: 10, fontWeight: 700, color: 'var(--n300)',
-        textTransform: 'uppercase', letterSpacing: '0.08em',
-      }}>
+    // CAMBIO 1: Añadido minWidth: 0 para que Flexbox/Grid permita que el texto con ellipsis se encoja correctamente
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          fontSize: 10,
+          fontWeight: 700,
+          color: "var(--n300)",
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+        }}
+      >
         {icon}
         {label}
       </div>
-      <span style={{
-        fontSize: 13, fontWeight: 600,
-        color: gris ? 'var(--n300)' : 'var(--n700)',
-        fontFamily: mono ? 'var(--font-mono)' : undefined,
-        fontSize: mono ? 11 : 13,
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      }}>
+      <span
+        style={{
+          fontWeight: 600,
+          color: gris ? "var(--n300)" : "var(--n700)",
+          fontFamily: mono ? "var(--font-mono)" : undefined,
+          fontSize: mono ? 11 : 13,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          width: "100%", // Asegura que ocupe el ancho de la celda para activar el truncado
+        }}
+      >
         {value}
       </span>
     </div>
-  )
+  );
 }
 
 // ─── Tarjeta ──────────────────────────────────────────────────────────────────
 
 export default function LicitacionCard({ licitacion: l, onClick }) {
-  const [hovered, setHovered] = useState(false)
-  const tipo = tipoBadge(l.fechaLimite)
-  const dias = diasRestantes(l.fechaLimite)
-  const importeNum = formatImporte(l.importe)
-  const tieneEnlace = l.enlace && l.enlace !== '#'
-  const ubicacionPartes = []
-  if (l.municipio) ubicacionPartes.push(l.municipio)
-  if (l.provincia) ubicacionPartes.push(l.provincia)
-  const ubicacion = ubicacionPartes.join(' · ') || 'España'
+  const [hovered, setHovered] = useState(false);
+  const tipo = tipoBadge(l.fechaLimite);
+  const dias = diasRestantes(l.fechaLimite);
+  const importeNum = formatImporte(l.importe);
+  const tieneEnlace = l.enlace && l.enlace !== "#";
+  const ubicacionPartes = [];
+  if (l.municipio) ubicacionPartes.push(l.municipio);
+  if (l.provincia) ubicacionPartes.push(l.provincia);
+  const ubicacion = ubicacionPartes.join(" · ") || "España";
 
   return (
     <article
@@ -55,38 +84,76 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#fff',
-        borderRadius: 'var(--r-xl)',
-        boxShadow: hovered ? 'var(--shadow-hover)' : 'var(--shadow-card)',
-        border: `1px solid ${hovered ? 'var(--g200)' : 'var(--n100)'}`,
-        overflow: 'hidden',
-        wordBreak: 'break-word',
-        cursor: 'pointer',
-        display: 'flex', flexDirection: 'row',
-        transition: 'transform var(--transition), box-shadow var(--transition), border-color var(--transition)',
-        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        background: "#fff",
+        borderRadius: "var(--r-xl)",
+        boxShadow: hovered ? "var(--shadow-hover)" : "var(--shadow-card)",
+        border: `1px solid ${hovered ? "var(--g200)" : "var(--n100)"}`,
+        overflow: "hidden",
+        wordBreak: "break-word",
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "row",
+        transition:
+          "transform var(--transition), box-shadow var(--transition), border-color var(--transition)",
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        // CAMBIO 2: Definir un ancho máximo o fijo para la tarjeta para que el contenedor grid/flex general no se rompa
+        width: "100%",
+        maxWidth: "380px", // Ajusta este valor al tamaño que quieras que tengan tus tarjetas en el dashboard
+        boxSizing: "border-box",
       }}
     >
       {/* Franja lateral de color */}
-      <div style={{ width: 5, background: barraColor[tipo], height: '100%', flexShrink: 0 }} />
+      <div
+        style={{
+          width: 5,
+          background: barraColor[tipo],
+          height: "100%",
+          flexShrink: 0,
+        }}
+      />
 
       {/* Cuerpo */}
-      <div style={{ padding: '18px 20px 16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-
+      {/* CAMBIO 3: Añadido minWidth: 0 al cuerpo. Es un comportamiento requerido en Flexbox para que los hijos con text-overflow funcionen */}
+      <div
+        style={{
+          padding: "18px 20px 16px",
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
         {/* Fila 1: Badge + Importe */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 10,
+          }}
+        >
           <Badge tipo={tipo} dias={dias} />
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
             {importeNum ? (
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 20, fontWeight: 700,
-                color: 'var(--g700)', lineHeight: 1,
-              }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: "var(--g700)",
+                  lineHeight: 1,
+                }}
+              >
                 {importeNum} €
               </span>
             ) : (
-              <span style={{ fontSize: 13, color: 'var(--n300)', fontStyle: 'italic' }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  color: "var(--n300)",
+                  fontStyle: "italic",
+                }}
+              >
                 Consultar
               </span>
             )}
@@ -94,48 +161,76 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
         </div>
 
         {/* Fila 2: Título — máximo 2 líneas */}
-        <h2 style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 15, fontWeight: 700,
-          color: 'var(--n900)',
-          lineHeight: 1.35,
-          marginTop: 12,
-          minHeight: 40,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          wordBreak: 'break-word',
-          overflowWrap: 'break-word',
-        }}>
-          {l.titulo || 'Sin título'}
+        <h2
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: 15,
+            fontWeight: 700,
+            color: "var(--n900)",
+            lineHeight: 1.35,
+            marginTop: 12,
+            minHeight: 40,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+          }}
+        >
+          {l.titulo || "Sin título"}
         </h2>
 
         {/* Fila 3: Organismo */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          marginTop: 6, overflow: 'hidden',
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            marginTop: 6,
+            overflow: "hidden",
+          }}
+        >
           <Building2 size={13} color="var(--n300)" style={{ flexShrink: 0 }} />
-          <span style={{
-            fontSize: 12, color: 'var(--n500)', fontWeight: 500,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            maxWidth: '100%',
-          }}>
-            {l.organismo || 'No especificado'}
+          <span
+            style={{
+              fontSize: 12,
+              color: "var(--n500)",
+              fontWeight: 500,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: "100%",
+            }}
+          >
+            {l.organismo || "No especificado"}
           </span>
         </div>
 
         {/* Separador */}
-        <div style={{ height: 1, background: 'var(--n50)', width: '100%', margin: '14px 0' }} />
+        <div
+          style={{
+            height: 1,
+            background: "var(--n50)",
+            width: "100%",
+            margin: "14px 0",
+          }}
+        />
 
         {/* Grid de metadatos */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 16px' }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "10px 16px",
+            minWidth: 0,
+          }}
+        >
           <MetaCell
             icon={<Calendar size={11} />}
             label="Fecha límite"
-            value={formatFecha(l.fechaLimite) || 'Sin plazo'}
+            value={formatFecha(l.fechaLimite) || "Sin plazo"}
             gris={!l.fechaLimite}
           />
           <MetaCell
@@ -151,7 +246,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
           <MetaCell
             icon={<FileText size={11} />}
             label="Expediente"
-            value={l.expediente || '—'}
+            value={l.expediente || "—"}
             mono
           />
         </div>
@@ -163,49 +258,75 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
               href={l.enlace}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                width: '100%', padding: '11px 16px',
-                background: 'var(--g700)', color: '#fff',
-                borderRadius: 'var(--r-md)',
-                fontSize: 13, fontWeight: 600,
-                transition: 'background var(--transition)',
-                fontFamily: 'var(--font-body)',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                width: "100%",
+                padding: "11px 16px",
+                background: "var(--g700)",
+                color: "#fff",
+                borderRadius: "var(--r-md)",
+                fontSize: 13,
+                fontWeight: 600,
+                transition: "background var(--transition)",
+                fontFamily: "var(--font-body)",
               }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--g800)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--g700)'}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "var(--g800)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "var(--g700)")
+              }
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.98)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
               Ver licitación oficial
               <ExternalLink size={13} />
             </a>
           ) : (
-            <button disabled style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              width: '100%', padding: '11px 16px',
-              background: 'var(--n100)', color: 'var(--n300)',
-              borderRadius: 'var(--r-md)',
-              fontSize: 13, fontWeight: 600,
-              cursor: 'not-allowed',
-            }}>
+            <button
+              disabled
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                width: "100%",
+                padding: "11px 16px",
+                background: "var(--n100)",
+                color: "var(--n300)",
+                borderRadius: "var(--r-md)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "not-allowed",
+              }}
+            >
               Enlace no disponible
             </button>
           )}
         </div>
 
         {/* Fecha publicación */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4,
-          marginTop: 10,
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 4,
+            marginTop: 10,
+          }}
+        >
           <Clock size={10} color="var(--n100)" />
-          <span style={{ fontSize: 10, color: 'var(--n300)' }}>
-            Publicado: {formatFecha(l.fechaPublicacion) || '—'}
+          <span style={{ fontSize: 10, color: "var(--n300)" }}>
+            Publicado: {formatFecha(l.fechaPublicacion) || "—"}
           </span>
         </div>
       </div>
     </article>
-  )
+  );
 }
