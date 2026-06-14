@@ -20,9 +20,9 @@
   --ambar-bg:    #fffbeb;
   --ambar-borde: #fde68a;
 
-  /* Paleta dashboard privado (Benco) */
-  --verde:       #2A5938;
-  --verde-medio: #3D7A4F;
+  /* Paleta dashboard privado (Benco) — alias de la escala de verdes */
+  --verde:       var(--g800);
+  --verde-medio: var(--g700);
   --verde-claro: #EAF4EE;
   --gris-fondo:  #F4F6F5;
   --negro:       #1E2A22;

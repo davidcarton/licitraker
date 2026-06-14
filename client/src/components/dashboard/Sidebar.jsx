@@ -1,5 +1,7 @@
-import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, FileText, Settings } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, FileText, Settings, LogOut } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext.jsx'
+import { iniciales } from '../../utils/format.js'
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Inicio', icon: LayoutDashboard, end: true },
@@ -8,6 +10,15 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar() {
+  const { usuario, logout } = useAuth()
+  const navigate = useNavigate()
+  const nombreEmpresa = usuario?.empresa?.nombre || 'Mi empresa'
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <aside
       className="dash-sidebar"
@@ -101,7 +112,7 @@ export default function Sidebar() {
           alignItems: 'center',
           gap: 10,
         }}
-        title="Constructora García"
+        title={nombreEmpresa}
       >
         <div
           style={{
@@ -119,7 +130,7 @@ export default function Sidebar() {
             flexShrink: 0,
           }}
         >
-          CG
+          {iniciales(nombreEmpresa)}
         </div>
         <span
           className="dash-sidebar-label"
@@ -130,10 +141,32 @@ export default function Sidebar() {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            flex: 1,
           }}
         >
-          Constructora García
+          {nombreEmpresa}
         </span>
+        <button
+          className="dash-sidebar-label"
+          aria-label="Cerrar sesión"
+          title="Cerrar sesión"
+          onClick={handleLogout}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 28,
+            height: 28,
+            borderRadius: 'var(--r-md)',
+            color: 'rgba(255,255,255,0.5)',
+            flexShrink: 0,
+            transition: 'background var(--transition), color var(--transition)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}
+        >
+          <LogOut size={15} />
+        </button>
       </div>
 
       <style>{`
