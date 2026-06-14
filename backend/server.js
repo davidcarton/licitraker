@@ -16,8 +16,7 @@ const licitacionesRoutes = require('./src/routes/licitaciones')
 const corsOrigins = (process.env.CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
 
 const app = express()
-app.use(cors(corsOrigins.length ? { origin: corsOrigins, credentials: true } : {}))
-app.use(express.static(path.join(__dirname, '..', 'public')))
+app.use(cors(corsOrigins.length ? { origin: corsOrigins, credentials: true } : { origin: true, credentials: true }))
 
 app.use(express.json())
 app.use('/api/auth', authRoutes)
