@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Save, Search, Info, CheckCircle, X,
+  Save, CheckCircle, X,
   BarChart2, TrendingUp, Database, Cloud, Table2, Mail,
 } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
@@ -9,7 +9,6 @@ import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 const TABS = [
   { id: 'perfil', label: 'Perfil' },
   { id: 'preferencias', label: 'Preferencias' },
-  { id: 'notificaciones', label: 'Notificaciones' },
   { id: 'crm', label: 'Integrar CRM' },
 ]
 
@@ -187,16 +186,7 @@ function TabPreferencias({ mostrarToast }) {
   const [importeDesde, setImporteDesde] = useState('30000')
   const [importeHasta, setImporteHasta] = useState('500000')
   const [plazo, setPlazo] = useState('todos')
-  const [cpvQuery, setCpvQuery] = useState('')
-  const [cpvResultados, setCpvResultados] = useState(null)
-  const [licitaciones, setLicitaciones] = useState([])
-
-  useEffect(() => {
-    fetch('/api/licitaciones')
-      .then(res => res.json())
-      .then(data => setLicitaciones(data.licitaciones || []))
-      .catch(() => {})
-  }, [])
+  const [notificaciones, setNotificaciones] = useState(NOTIFICACIONES_INICIAL)
 
   const toggleTipo = (tipo) => {
     setTiposObra(prev => ({ ...prev, [tipo]: !prev[tipo] }))
@@ -206,212 +196,146 @@ function TabPreferencias({ mostrarToast }) {
     setProvinciasActivas(prev => ({ ...prev, [provincia]: !prev[provincia] }))
   }
 
-  const buscarCPV = () => {
-    const q = cpvQuery.trim()
-    if (!q) { setCpvResultados([]); return }
-    setCpvResultados(licitaciones.filter(l => l.cpv?.includes(q)).slice(0, 8))
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 760 }}>
-      <Card title="Tipo de obra" subtitle="Selecciona los tipos de licitación que te interesan">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px 16px' }}>
-          {TIPOS_OBRA.map(tipo => (
-            <label key={tipo} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--n700)', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={tiposObra[tipo]}
-                onChange={() => toggleTipo(tipo)}
-                style={{ width: 16, height: 16, accentColor: '#3D7A4F' }}
-              />
-              {tipo}
-            </label>
-          ))}
-        </div>
-      </Card>
-
-      <Card title="Provincias" subtitle="Elige las provincias donde buscar licitaciones">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {PROVINCIAS.map(p => {
-            const activa = provinciasActivas[p]
-            return (
-              <button
-                key={p}
-                onClick={() => toggleProvincia(p)}
-                style={{
-                  padding: '7px 14px',
-                  borderRadius: 100,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-body)',
-                  border: `1px solid ${activa ? 'var(--verde)' : 'var(--n100)'}`,
-                  background: activa ? 'var(--verde-claro)' : '#fff',
-                  color: activa ? 'var(--verde)' : 'var(--n500)',
-                  transition: 'all var(--transition)',
-                }}
-              >
-                {p}
-              </button>
-            )
-          })}
-        </div>
-      </Card>
-
-      <Card title="Importe de la licitación" subtitle="Define el rango de presupuesto que te interesa">
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-              Desde
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                value={formatMiles(importeDesde)}
-                onChange={(e) => setImporteDesde(soloDigitos(e.target.value))}
-                style={{ ...inputStyle, paddingRight: 32 }}
-                inputMode="numeric"
-              />
-              <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--n400)' }}>€</span>
-            </div>
-          </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-              Hasta
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                value={formatMiles(importeHasta)}
-                onChange={(e) => setImporteHasta(soloDigitos(e.target.value))}
-                style={{ ...inputStyle, paddingRight: 32 }}
-                inputMode="numeric"
-              />
-              <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--n400)' }}>€</span>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <Card title="Plazo de presentación" subtitle="¿Con cuánta antelación quieres ver las licitaciones?">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {PLAZOS.map(p => (
-            <label key={p.value} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--n700)', cursor: 'pointer' }}>
-              <input
-                type="radio"
-                name="plazo"
-                value={p.value}
-                checked={plazo === p.value}
-                onChange={() => setPlazo(p.value)}
-                style={{ width: 16, height: 16, accentColor: '#3D7A4F' }}
-              />
-              {p.label}
-            </label>
-          ))}
-        </div>
-      </Card>
-
-      <Card title="Búsqueda por código CPV" subtitle="Filtra licitaciones del radar por código CPV concreto">
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <input
-            value={cpvQuery}
-            onChange={(e) => setCpvQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') buscarCPV() }}
-            placeholder="Ej. 45000000"
-            style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-          />
-          <button
-            onClick={buscarCPV}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 20px',
-              borderRadius: 'var(--r-md)',
-              background: 'var(--verde-medio)',
-              color: '#fff',
-              fontSize: 13, fontWeight: 700,
-              fontFamily: 'var(--font-body)',
-              transition: 'background var(--transition)',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--verde)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--verde-medio)')}
-          >
-            <Search size={15} />
-            Buscar
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 12 }}>
-          <Info size={14} color="var(--n400)" style={{ flexShrink: 0, marginTop: 2 }} />
-          <p style={{ fontSize: 12, color: 'var(--n400)', margin: 0, lineHeight: 1.5 }}>
-            Los códigos CPV identifican el tipo de obra (por ejemplo, 72000000 corresponde a servicios
-            de tecnologías de la información). Puedes buscar por el código completo o solo por su prefijo.
-          </p>
-        </div>
-
-        {cpvResultados !== null && (
-          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {cpvResultados.length === 0 ? (
-              <span style={{ fontSize: 13, color: 'var(--n400)' }}>
-                No se han encontrado licitaciones con ese código CPV.
-              </span>
-            ) : cpvResultados.map((l, i) => (
-              <div
-                key={l.expediente || i}
-                style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
-                  padding: '10px 14px',
-                  background: 'var(--gris-fondo)',
-                  borderRadius: 'var(--r-md)',
-                }}
-              >
-                <span style={{
-                  fontSize: 12, fontWeight: 700, color: 'var(--negro)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {l.titulo || 'Sin título'}
-                </span>
-                <span style={{ fontSize: 12, color: 'var(--n400)', flexShrink: 0 }}>
-                  {l.provincia || '—'}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <BotonGuardar onClick={() => mostrarToast('Preferencias guardadas')} />
-    </div>
-  )
-}
-
-function TabNotificaciones({ mostrarToast }) {
-  const [notificaciones, setNotificaciones] = useState(NOTIFICACIONES_INICIAL)
-
-  const toggle = (id) => {
+  const toggleNotificacion = (id) => {
     setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, valor: !n.valor } : n))
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 640 }}>
-      <Card title="Notificaciones" subtitle="Elige cómo quieres que LiciTracker te avise">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {notificaciones.map((n, i) => (
-            <div
-              key={n.id}
-              style={{
-                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16,
-                paddingBottom: i < notificaciones.length - 1 ? 18 : 0,
-                borderBottom: i < notificaciones.length - 1 ? '1px solid var(--n50)' : 'none',
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--negro)' }}>{n.label}</div>
-                <div style={{ fontSize: 12, color: 'var(--n400)', marginTop: 4 }}>{n.descripcion}</div>
-              </div>
-              <Toggle checked={n.valor} onChange={() => toggle(n.id)} />
-            </div>
-          ))}
-        </div>
-      </Card>
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontFamily: 'var(--font-titulo)', fontSize: 18, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
+          Qué te interesa recibir por email
+        </h2>
+        <p style={{ fontSize: 13, color: 'var(--n400)', marginTop: 6, maxWidth: 640 }}>
+          Define los criterios de las licitaciones que quieres que LiciTracker te avise por correo,
+          y cómo quieres recibir esos avisos.
+        </p>
+      </div>
 
-      <BotonGuardar onClick={() => mostrarToast('Preferencias de notificaciones guardadas')} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 24, alignItems: 'start' }}>
+        {/* Columna principal: criterios de contenido */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <Card title="Tipo de obra" subtitle="Selecciona los tipos de licitación que te interesan">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px 16px' }}>
+              {TIPOS_OBRA.map(tipo => (
+                <label key={tipo} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--n700)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={tiposObra[tipo]}
+                    onChange={() => toggleTipo(tipo)}
+                    style={{ width: 16, height: 16, accentColor: '#3D7A4F' }}
+                  />
+                  {tipo}
+                </label>
+              ))}
+            </div>
+          </Card>
+
+          <Card title="Provincias" subtitle="Elige las provincias donde buscar licitaciones">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {PROVINCIAS.map(p => {
+                const activa = provinciasActivas[p]
+                return (
+                  <button
+                    key={p}
+                    onClick={() => toggleProvincia(p)}
+                    style={{
+                      padding: '7px 14px',
+                      borderRadius: 100,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-body)',
+                      border: `1px solid ${activa ? 'var(--verde)' : 'var(--n100)'}`,
+                      background: activa ? 'var(--verde-claro)' : '#fff',
+                      color: activa ? 'var(--verde)' : 'var(--n500)',
+                      transition: 'all var(--transition)',
+                    }}
+                  >
+                    {p}
+                  </button>
+                )
+              })}
+            </div>
+          </Card>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+            <Card title="Importe de la licitación" subtitle="Rango de presupuesto que te interesa">
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                    Desde
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      value={formatMiles(importeDesde)}
+                      onChange={(e) => setImporteDesde(soloDigitos(e.target.value))}
+                      style={{ ...inputStyle, paddingRight: 32 }}
+                      inputMode="numeric"
+                    />
+                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--n400)' }}>€</span>
+                  </div>
+                </div>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                    Hasta
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      value={formatMiles(importeHasta)}
+                      onChange={(e) => setImporteHasta(soloDigitos(e.target.value))}
+                      style={{ ...inputStyle, paddingRight: 32 }}
+                      inputMode="numeric"
+                    />
+                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--n400)' }}>€</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card title="Plazo de presentación" subtitle="¿Con cuánta antelación quieres verlas?">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {PLAZOS.map(p => (
+                  <label key={p.value} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--n700)', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="plazo"
+                      value={p.value}
+                      checked={plazo === p.value}
+                      onChange={() => setPlazo(p.value)}
+                      style={{ width: 16, height: 16, accentColor: '#3D7A4F' }}
+                    />
+                    {p.label}
+                  </label>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <BotonGuardar onClick={() => mostrarToast('Preferencias guardadas')} />
+        </div>
+
+        {/* Columna lateral: forma de aviso */}
+        <Card title="Notificaciones" subtitle="Cómo quieres que te avisemos">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {notificaciones.map((n, i) => (
+              <div
+                key={n.id}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
+                  paddingBottom: i < notificaciones.length - 1 ? 18 : 0,
+                  borderBottom: i < notificaciones.length - 1 ? '1px solid var(--n50)' : 'none',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--negro)' }}>{n.label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--n400)', marginTop: 4 }}>{n.descripcion}</div>
+                </div>
+                <Toggle checked={n.valor} onChange={() => toggleNotificacion(n.id)} />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -602,7 +526,6 @@ export default function Configuracion() {
 
       {tab === 'perfil' && <TabPerfil mostrarToast={mostrarToast} />}
       {tab === 'preferencias' && <TabPreferencias mostrarToast={mostrarToast} />}
-      {tab === 'notificaciones' && <TabNotificaciones mostrarToast={mostrarToast} />}
       {tab === 'crm' && <TabCRM />}
 
       <AnimatePresence>
