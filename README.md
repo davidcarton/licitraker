@@ -10,7 +10,7 @@ Demo en producción: **http://187.33.144.208:3002**
 
 - Descarga y filtra automáticamente las licitaciones de obra del feed oficial del Estado
 - Muestra solo las licitaciones activas (plazo no vencido) con CPV 45 u obras del tipo 3
-- Permite guardar licitaciones por empresa y marcarlas como presentadas
+- Permite guardar licitaciones por empresa, marcarlas como presentadas y registrar el resultado (aceptada/denegada), con gráfica de evolución en el Dashboard
 - Genera resúmenes con IA (Claude Haiku) de cada licitación
 - Panel de administración para el superadmin con estado del sistema y logs
 - Multi-empresa: cada empresa registrada tiene sus propios usuarios y licitaciones guardadas
@@ -41,7 +41,8 @@ licitraker/
 │   ├── server.js                  # Servidor principal Express
 │   ├── knexfile.js                # Configuración Knex (dev/prod)
 │   ├── scripts/
-│   │   └── crear-superadmin.js    # Script para crear usuario superadmin
+│   │   ├── crear-superadmin.js    # Script para crear usuario superadmin
+│   │   └── crear-constructora-garcia.js  # Script de alta de un cliente real (rol user)
 │   └── src/
 │       ├── cache.js               # Caché en memoria del feed PLACSP
 │       ├── db/
@@ -69,14 +70,14 @@ licitraker/
         ├── pages/
         │   ├── Login.jsx
         │   ├── Registro.jsx
-        │   ├── Dashboard.jsx      # KPIs + paneles expandibles
+        │   ├── Dashboard.jsx      # KPIs + secciones "guardadas" y "presentadas" siempre visibles + gráfica de resultados
         │   ├── Licitaciones.jsx   # Listado del feed PLACSP con filtros
         │   ├── ResumenIA.jsx      # Resumen generado por IA
-        │   ├── Configuracion.jsx  # Ajustes de la empresa
+        │   ├── Configuracion.jsx  # Perfil / Preferencias (incluye notificaciones) / Integrar CRM
         │   └── Admin.jsx          # Panel superadmin
         ├── components/
         │   ├── auth/              # AuthLayout, FormInput, RutaProtegida
-        │   ├── dashboard/         # DashboardLayout, Sidebar, Header, KPICard, TablaUrgentes
+        │   ├── dashboard/         # DashboardLayout, Sidebar, Header, KPICard, TablaUrgentes (sin usar, ver Notas conocidas)
         │   ├── cards/             # LicitacionCard, LicitacionModal
         │   └── ui/                # Alert, Badge, DataTable, FiltroBarra, Spinner, etc.
         ├── styles/
@@ -166,7 +167,7 @@ Las migraciones crean las tablas:
 - `empresas` — CIF, nombre, plan (starter/pro/enterprise), activa
 - `usuarios` — email, password_hash (bcrypt), rol (user/admin/superadmin), empresa_id
 - `preferencias` — CPVs de interés, provincias, importes mín/máx por empresa
-- `licitaciones_guardadas` — licitaciones guardadas por empresa, con estado (nueva/seguimiento/presentada/descartada)
+- `licitaciones_guardadas` — licitaciones guardadas por empresa, con `estado` ∈ `guardada`, `en_estudio`, `presentada`, `descartada`, `ganada`, `perdida`, `aceptada`, `denegada` (ver `ESTADOS_VALIDOS` en `backend/src/routes/licitaciones.js`)
 
 ### Crear superadmin
 
@@ -177,14 +178,15 @@ node scripts/crear-superadmin.js
 
 El script pedirá nombre, email y contraseña por consola.
 
-### Cuenta de demo
+### Cuentas existentes
 
-| Campo | Valor |
-|---|---|
-| Empresa | Constructoras del Norte S.L. (plan: pro) |
-| Email | maria@constructorasnorte.es |
-| Contraseña | Demo2024! |
-| Rol | admin |
+| Empresa | Email | Contraseña | Rol | Tipo |
+|---|---|---|---|---|
+| — | david.carton@benco.es | (la suya) | `superadmin` | Único superadmin actual |
+| Constructoras del Norte S.L. (plan: pro) | maria@constructorasnorte.es | Demo2024! | `admin` | Cuenta de demo / pruebas |
+| Constructora García (plan: pro) | info@constructoragarcia.com | nuria2026 | `user` | Cliente real (alta vía `crear-constructora-garcia.js`) |
+
+**Política de roles actual**: por el momento solo `david.carton@benco.es` tiene rol `admin`/`superadmin`. Todas las nuevas altas de clientes deben crearse con rol `user` salvo indicación expresa. El sistema soporta conceder `admin`/`superadmin` a otros usuarios en el futuro sin cambios de código — basta con actualizar el campo `rol` en la tabla `usuarios`.
 
 ---
 
@@ -226,9 +228,11 @@ El objeto `usuario` devuelto tiene la forma:
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/licitaciones-guardadas` | Lista las guardadas de la empresa del usuario |
-| `POST` | `/api/licitaciones-guardadas` | Guarda una licitación |
-| `PATCH` | `/api/licitaciones-guardadas/:id` | Actualiza estado o notas |
+| `POST` | `/api/licitaciones-guardadas/guardar` | Guarda una licitación (upsert por `empresa_id` + `licitacion_id`) |
+| `PATCH` | `/api/licitaciones-guardadas/:id/estado` | Cambia el `estado` (debe ser uno de `ESTADOS_VALIDOS`) |
 | `DELETE` | `/api/licitaciones-guardadas/:id` | Elimina una guardada |
+
+El frontend (`AppContext.jsx`) separa las guardadas en dos listas según el estado: `licitacionesGuardadas` (resto) y `licitacionesPresentadas` (`presentada`, `aceptada`, `denegada`). Las funciones `marcarPresentada`, `marcarAceptada` y `marcarDenegada` usan el endpoint `PATCH .../estado`.
 
 ### Admin (`/api/admin`) — requiere JWT + rol superadmin
 
@@ -247,7 +251,11 @@ El objeto `usuario` devuelto tiene la forma:
 | `admin` | Igual que user + puede gestionar usuarios de su empresa |
 | `superadmin` | Todo lo anterior + panel `/dashboard/admin` con estado del sistema y logs |
 
-El primer usuario registrado en una empresa tiene rol `admin`. Los superadmin se crean manualmente con el script.
+El primer usuario registrado en una empresa (vía `/api/auth/register`) recibe rol `admin` automáticamente. Los `superadmin` se crean manualmente (script `crear-superadmin.js` o UPDATE directo en BD).
+
+La visibilidad del módulo de administración está protegida en 3 capas: el Sidebar oculta el enlace si `usuario.rol !== 'superadmin'`, la página `Admin.jsx` redirige a `/dashboard` si no es superadmin, y el backend (`middleware/admin.js`) devuelve 403 si `req.user.rol !== 'superadmin'`.
+
+Ver política de roles actual en la tabla de [Cuentas existentes](#cuentas-existentes).
 
 ---
 
@@ -313,6 +321,9 @@ pm2 stop LiciTraker         # Parar
 
 ## Notas conocidas
 
-- **Bug en Sidebar.jsx**: `usuario?.empresa` es un objeto, no un string. Renderizarlo directamente provoca pantalla en blanco. La corrección es `usuario?.empresa?.nombre`. Pendiente de arreglar.
 - **Límite de importe en BD**: La columna `importe` en producción es `NUMERIC(8,2)` — máximo 999,999.99 €. Importes mayores provocan error al guardar.
 - **IA opcional**: Si no hay `ANTHROPIC_API_KEY` en el `.env`, el botón de resumen devuelve error 500 pero el resto de la app funciona con normalidad.
+- **`usuario.empresa` es un objeto** (`{id, nombre, plan}`), no un string. Siempre acceder con `usuario?.empresa?.nombre`. El Sidebar y el Dashboard ya lo hacen correctamente — tenerlo en cuenta en cualquier componente nuevo que muestre el nombre de empresa.
+- **`TablaUrgentes.jsx`** (`client/src/components/dashboard/`) quedó sin uso tras el rediseño del Dashboard (las secciones "guardadas"/"presentadas" siempre visibles sustituyeron al panel de "Atención requerida"). No se ha borrado por si se quiere recuperar esa vista; valorar eliminarlo si no se reutiliza.
+- **Fuentes**: `--font-display` (Syne 800) es un display font pesado, poco legible en tamaños pequeños/densos (tarjetas, listas). Usar `--font-titulo` (Inter) o `'DM Sans'` para títulos de tarjeta e importes; reservar Syne para titulares grandes.
+- **Gráfica de resultados del Dashboard** (`GraficaResultados` en `Dashboard.jsx`) se construye con divs CSS (sin librería de gráficos), agrupando por mes a partir de `fechaResolucion` (= `updated_at` de la fila). Solo se muestra el desglose mensual si hay datos de más de un mes.
