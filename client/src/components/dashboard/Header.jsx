@@ -1,6 +1,13 @@
 import { Search, Bell, Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext.jsx'
+import { iniciales } from '../../utils/format.js'
 
 export default function Header({ title }) {
+  const { usuario } = useAuth()
+  const navigate = useNavigate()
+  const nombreEmpresa = usuario?.empresa?.nombre || 'Mi empresa'
+
   return (
     <header
       className="dash-header"
@@ -74,30 +81,11 @@ export default function Header({ title }) {
           onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
         >
           <Bell size={17} color="#fff" />
-          <span
-            style={{
-              position: 'absolute',
-              top: -2,
-              right: -2,
-              width: 16,
-              height: 16,
-              borderRadius: '50%',
-              background: 'var(--rojo)',
-              color: '#fff',
-              fontSize: 9,
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '2px solid #1B2B1F',
-            }}
-          >
-            3
-          </span>
         </button>
 
         <button
           className="dash-header-alerta"
+          onClick={() => navigate('/dashboard/configuracion')}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -136,7 +124,7 @@ export default function Header({ title }) {
               flexShrink: 0,
             }}
           >
-            CG
+            {iniciales(nombreEmpresa)}
           </div>
           <span
             className="dash-header-empresa"
@@ -147,7 +135,7 @@ export default function Header({ title }) {
               whiteSpace: 'nowrap',
             }}
           >
-            Constructora García
+            {nombreEmpresa}
           </span>
         </div>
       </div>

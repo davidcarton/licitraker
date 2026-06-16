@@ -41,3 +41,10 @@ export function descripcionCPV(cpvStr) {
   const p = String(cpvStr).split(/\s+/).find(c => c.startsWith('45')) || ''
   return CPV_DESCRIPCIONES[p.substring(0,3)] || 'Obra de construcción'
 }
+
+export function iniciales(nombre) {
+  if (!nombre) return '?'
+  const palabras = nombre.trim().split(/\s+/)
+  if (palabras.length === 1) return palabras[0].slice(0, 2).toUpperCase()
+  return (palabras[0][0] + palabras[1][0]).toUpperCase()
+}
