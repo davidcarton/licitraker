@@ -40,7 +40,7 @@ const LICITACIONES_DEMO = [
     licitacion_id: 'DEMO-2024-002',
     titulo: 'Construcción de nave industrial en polígono Los Llanos',
     organismo: 'Consorcio Industrial de La Rioja',
-    importe: 1250000,
+    importe: 890000,
     fecha_limite: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     provincia: 'La Rioja',
     municipio: 'Logroño',
