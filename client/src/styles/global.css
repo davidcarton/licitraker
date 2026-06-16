@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --g900: #1a3d28;
   --g800: #2A5938;
