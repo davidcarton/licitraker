@@ -165,11 +165,11 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
         {/* Fila 2: Título — máximo 2 líneas */}
         <h2
           style={{
-            fontFamily: "var(--font-display)",
-            fontSize: 15,
-            fontWeight: 800 /* Modificado para Syne 800 */,
+            fontFamily: "var(--font-titulo)",
+            fontSize: 14,
+            fontWeight: 600,
             color: "var(--n900)",
-            lineHeight: 1.35,
+            lineHeight: 1.45,
             marginTop: 12,
             minHeight: 40,
             display: "-webkit-box",
