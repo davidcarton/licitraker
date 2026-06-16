@@ -3,6 +3,8 @@ import { useAuth } from './AuthContext.jsx'
 
 const AppContext = createContext(null)
 
+const ESTADOS_PRESENTADA = ['presentada', 'aceptada', 'denegada']
+
 function mapGuardada(g) {
   return {
     _id: g.id,
@@ -16,6 +18,7 @@ function mapGuardada(g) {
     cpv: g.cpv,
     enlace: g.enlace,
     estado: g.estado,
+    fechaResolucion: g.updated_at,
   }
 }
 
@@ -30,8 +33,8 @@ export function AppProvider({ children }) {
       const datos = await res.json()
       if (!res.ok) return
       const todas = (datos.guardadas || []).map(mapGuardada)
-      setLicitacionesGuardadas(todas.filter(l => l.estado !== 'presentada'))
-      setLicitacionesPresentadas(todas.filter(l => l.estado === 'presentada'))
+      setLicitacionesGuardadas(todas.filter(l => !ESTADOS_PRESENTADA.includes(l.estado)))
+      setLicitacionesPresentadas(todas.filter(l => ESTADOS_PRESENTADA.includes(l.estado)))
     } catch {
       // sin conexión: se mantiene el estado actual
     }
@@ -39,7 +42,7 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     if (autenticado) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- carga asíncrona de guardadas/presentadas al iniciar sesión
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- carga asíncrona al iniciar sesión
       cargarGuardadas()
     } else {
       setLicitacionesGuardadas([])
@@ -61,7 +64,7 @@ export function AppProvider({ children }) {
         prev.some(l => l.expediente === licitacion.expediente) ? prev : [...prev, mapGuardada(datos.guardada)]
       )
     } catch {
-      // no-op: la acción no persiste sin conexión
+      // no-op
     }
   }
 
@@ -73,7 +76,7 @@ export function AppProvider({ children }) {
       if (!res.ok) return
       setLicitacionesGuardadas(prev => prev.filter(l => l.expediente !== expediente))
     } catch {
-      // no-op: la acción no persiste sin conexión
+      // no-op
     }
   }
 
@@ -93,9 +96,31 @@ export function AppProvider({ children }) {
         prev.some(l => l.expediente === expediente) ? prev : [...prev, mapGuardada(datos.guardada)]
       )
     } catch {
-      // no-op: la acción no persiste sin conexión
+      // no-op
     }
   }
+
+  const actualizarEstadoPresentada = async (expediente, estado) => {
+    const item = licitacionesPresentadas.find(l => l.expediente === expediente)
+    if (!item) return
+    try {
+      const res = await authFetch(`/api/licitaciones-guardadas/${item._id}/estado`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado }),
+      })
+      const datos = await res.json()
+      if (!res.ok) return
+      setLicitacionesPresentadas(prev =>
+        prev.map(l => l.expediente === expediente ? mapGuardada(datos.guardada) : l)
+      )
+    } catch {
+      // no-op
+    }
+  }
+
+  const marcarAceptada = (expediente) => actualizarEstadoPresentada(expediente, 'aceptada')
+  const marcarDenegada = (expediente) => actualizarEstadoPresentada(expediente, 'denegada')
 
   return (
     <AppContext.Provider value={{
@@ -104,6 +129,8 @@ export function AppProvider({ children }) {
       guardarLicitacion,
       quitarLicitacion,
       marcarPresentada,
+      marcarAceptada,
+      marcarDenegada,
     }}>
       {children}
     </AppContext.Provider>

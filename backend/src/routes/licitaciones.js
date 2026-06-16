@@ -3,7 +3,7 @@ const db = require('../db')
 const auth = require('../middleware/auth')
 const logger = require('../utils/logger')
 
-const ESTADOS_VALIDOS = ['guardada', 'en_estudio', 'presentada', 'descartada', 'ganada', 'perdida']
+const ESTADOS_VALIDOS = ['guardada', 'en_estudio', 'presentada', 'descartada', 'ganada', 'perdida', 'aceptada', 'denegada']
 
 router.use(auth)
 
