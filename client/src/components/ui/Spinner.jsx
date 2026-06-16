@@ -1,26 +1,11 @@
-export default function Spinner() {
+export default function Spinner({ message = 'Cargando...' }) {
   return (
-    <div style={{
-      minHeight: '50vh',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      gap: 16,
-    }}>
-      <div style={{
-        width: 44, height: 44,
-        borderRadius: '50%',
-        border: '3px solid var(--g100)',
-        borderTopColor: 'var(--g700)',
-        animation: 'spin 0.8s linear infinite',
-      }} />
-      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, color: 'var(--n700)' }}>
-          Consultando licitaciones...
-        </span>
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--n300)' }}>
-          Conectando con el Gobierno de España
-        </span>
-      </div>
+    <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <div
+        className="w-8 h-8 rounded-full border-2 border-border border-t-brand"
+        style={{ animation: 'spin 0.7s linear infinite' }}
+      />
+      <p className="text-sm text-ink-3">{message}</p>
     </div>
   )
 }
