@@ -7,7 +7,7 @@ docker-compose up -d
 cd backend && node server.js
 ```
 
-La web estará disponible en http://localhost:3000
+La web estará disponible en http://localhost:3002
 
 ## Cómo arrancar el frontend en modo desarrollo
 

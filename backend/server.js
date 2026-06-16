@@ -459,7 +459,7 @@ app.get('/api/estado', (req, res) => {
 })
 
 // ─── Servir frontend React (build de producción) ──────────────────────────────
-// Ejecutar: cd client && npm run build — y luego node server.js sirve todo en :3000
+// Ejecutar: cd client && npm run build — y luego node server.js sirve todo en :3002
 
 const clientDist = path.join(__dirname, '..', 'client', 'dist')
 const fs = require('fs')
@@ -472,7 +472,7 @@ if (fs.existsSync(clientDist)) {
 
 // ─── Arranque ──────────────────────────────────────────────────────────────────
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3002
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\nLiciTracker corriendo en http://localhost:${PORT}`)
 
