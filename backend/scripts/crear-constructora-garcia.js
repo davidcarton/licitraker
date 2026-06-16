@@ -32,7 +32,7 @@ async function main() {
         nombre: NOMBRE,
         email: EMAIL,
         password_hash: passwordHash,
-        rol: 'admin'
+        rol: 'user'
       })
       .returning('*')
 
