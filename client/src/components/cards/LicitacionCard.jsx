@@ -165,13 +165,13 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
         {/* Fila 2: Título — máximo 2 líneas */}
         <h2
           style={{
-            fontFamily: "var(--font-titulo)",
-            fontSize: 14,
-            fontWeight: 600,
-            color: "var(--n900)",
-            lineHeight: 1.45,
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 15,
+            fontWeight: 700,
+            color: "#1a1a1a",
+            lineHeight: 1.5,
             marginTop: 12,
-            minHeight: 40,
+            minHeight: 44,
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
@@ -179,6 +179,7 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
             textOverflow: "ellipsis",
             wordBreak: "break-word",
             overflowWrap: "break-word",
+            letterSpacing: "-0.01em",
           }}
         >
           {l.titulo || "Sin título"}
