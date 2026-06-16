@@ -12,21 +12,24 @@ const Anthropic = require('@anthropic-ai/sdk')
 
 const authRoutes = require('./src/routes/auth')
 const licitacionesRoutes = require('./src/routes/licitaciones')
-const adminRoutes = require('./src/routes/admin')
-const logger = require('./src/utils/logger')
-const cache = require('./src/cache')
 
 const corsOrigins = (process.env.CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
 
 const app = express()
-app.use(cors(corsOrigins.length ? { origin: corsOrigins, credentials: true } : { origin: true, credentials: true }))
+app.use(cors(corsOrigins.length ? { origin: corsOrigins, credentials: true } : {}))
+app.use(express.static(path.join(__dirname, '..', 'public')))
 
 app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/licitaciones-guardadas', licitacionesRoutes)
-app.use('/api/admin', adminRoutes)
 
 const ATOM_URL = 'https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom'
+
+let cache = {
+  datos: null,
+  ultimaActualizacion: null,
+  proximaActualizacion: null
+}
 
 // ─── Próxima actualización ─────────────────────────────────────────────────────
 
@@ -268,7 +271,7 @@ async function descargarYFiltrar(filtroFn, maxResultados, maxPaginas = MAX_PAGIN
     try {
       result = await descargarYParsear(url)
     } catch (e) {
-      logger.warn('placsp', `Error en página ${paginas + 1}: ${e.message}`)
+      console.warn(`[placsp] Error en página ${paginas + 1}:`, e.message)
       break
     }
 
@@ -307,7 +310,7 @@ async function descargarYProcesar() {
     cache.proximaActualizacion = getProximaActualizacion().toISOString()
     console.log(`[placsp] OK — ${todasObras.length} obras en plazo`)
   } catch (err) {
-    logger.error('placsp', 'Error en descarga: ' + err.message)
+    console.error('[placsp] Error en descarga:', err.message)
   }
 }
 
@@ -375,7 +378,7 @@ app.get('/api/licitaciones', async (req, res) => {
       licitaciones: cache.datos
     })
   } catch (err) {
-    logger.error('api', 'Error: ' + err.message)
+    console.error('[api] Error:', err.message)
     res.json({ error: err.message || 'Error al obtener licitaciones', licitaciones: [] })
   }
 })
@@ -397,7 +400,7 @@ app.get('/api/buscar-cpv', async (req, res) => {
       licitaciones: resultados.slice(0, 50),
     })
   } catch (err) {
-    logger.error('api', 'Error en buscar-cpv: ' + err.message)
+    console.error('[api] Error en buscar-cpv:', err.message)
     res.json({ error: err.message || 'Error al buscar por CPV', licitaciones: [] })
   }
 })
@@ -443,7 +446,7 @@ Si no tienes información suficiente para algún apartado, indícalo brevemente 
 
     res.json({ resumen: message.content[0].text })
   } catch (err) {
-    logger.error('api', 'Error en resumen-ia: ' + err.message)
+    console.error('[api] Error en resumen-ia:', err.message)
     res.status(500).json({ error: 'No se ha podido generar el resumen con IA' })
   }
 })
@@ -459,7 +462,7 @@ app.get('/api/estado', (req, res) => {
 })
 
 // ─── Servir frontend React (build de producción) ──────────────────────────────
-// Ejecutar: cd client && npm run build — y luego node server.js sirve todo en :3002
+// Ejecutar: cd client && npm run build — y luego node server.js sirve todo en :3000
 
 const clientDist = path.join(__dirname, '..', 'client', 'dist')
 const fs = require('fs')
@@ -472,7 +475,7 @@ if (fs.existsSync(clientDist)) {
 
 // ─── Arranque ──────────────────────────────────────────────────────────────────
 
-const PORT = process.env.PORT || 3002
+const PORT = process.env.PORT || 3000
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\nLiciTracker corriendo en http://localhost:${PORT}`)
 

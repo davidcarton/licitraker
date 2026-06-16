@@ -1,31 +1,165 @@
-import { Bell } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { Search, Bell, Plus } from 'lucide-react'
 
-export default function Header({ title, sidebarWidth = 220 }) {
-  const { usuario } = useAuth()
-  const initials = usuario?.nombre
-    ? usuario.nombre.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    : '?'
-
+export default function Header({ title }) {
   return (
     <header
-      className="fixed top-0 right-0 bg-surface border-b border-border flex items-center px-6 gap-4 z-20"
+      className="dash-header"
       style={{
-        left: sidebarWidth,
         height: 56,
-        transition: 'left 0.2s var(--ease)',
+        flexShrink: 0,
+        background: '#1B2B1F',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        padding: '0 clamp(1rem, 3vw, 1.75rem)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
       }}
     >
-      <h1 className="font-semibold text-ink text-[15px] shrink-0">{title}</h1>
+      <h1
+        style={{
+          fontFamily: 'var(--font-titulo)',
+          fontSize: 15,
+          fontWeight: 600,
+          color: '#fff',
+          margin: 0,
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {title}
+      </h1>
 
-      <div className="ml-auto flex items-center gap-2">
-        <button className="p-1.5 rounded-md text-ink-3 hover:text-ink-2 hover:bg-subtle transition-colors">
-          <Bell size={17} />
-        </button>
-        <div className="w-7 h-7 rounded-full bg-brand flex items-center justify-center text-white text-[11px] font-semibold">
-          {initials}
+      <div className="dash-header-buscador" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', width: 360, maxWidth: '100%' }}>
+          <Search size={15} style={{
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+            color: 'rgba(255,255,255,0.5)', pointerEvents: 'none',
+          }} />
+          <input
+            type="text"
+            placeholder="Buscar..."
+            style={{
+              width: '100%',
+              padding: '8px 12px 8px 36px',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(255,255,255,0.08)',
+              color: '#fff',
+              fontSize: 13,
+            }}
+          />
         </div>
       </div>
+
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <button
+          aria-label="Notificaciones"
+          style={{
+            position: 'relative',
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(255,255,255,0.08)',
+            transition: 'background var(--transition)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.16)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+        >
+          <Bell size={17} color="#fff" />
+          <span
+            style={{
+              position: 'absolute',
+              top: -2,
+              right: -2,
+              width: 16,
+              height: 16,
+              borderRadius: '50%',
+              background: 'var(--rojo)',
+              color: '#fff',
+              fontSize: 9,
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px solid #1B2B1F',
+            }}
+          >
+            3
+          </span>
+        </button>
+
+        <button
+          className="dash-header-alerta"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            background: '#3D7A4F',
+            color: '#fff',
+            padding: '6px 14px',
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: 'var(--font-body)',
+            whiteSpace: 'nowrap',
+            transition: 'background var(--transition)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--verde)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#3D7A4F')}
+        >
+          <Plus size={15} />
+          Nueva alerta
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: 'var(--verde-medio)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              fontWeight: 700,
+              fontFamily: 'var(--font-titulo)',
+              flexShrink: 0,
+            }}
+          >
+            CG
+          </div>
+          <span
+            className="dash-header-empresa"
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#fff',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Constructora García
+          </span>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 860px) {
+          .dash-header-empresa, .dash-header-alerta { display: none !important; }
+        }
+        @media (max-width: 680px) {
+          .dash-header-buscador { display: none !important; }
+        }
+      `}</style>
     </header>
   )
 }

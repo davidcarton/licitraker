@@ -52,3 +52,11 @@ CREATE TABLE IF NOT EXISTS licitaciones_guardadas (
   updated_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(empresa_id, licitacion_id)
 );
+
+CREATE TABLE IF NOT EXISTS sesiones (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  token_hash VARCHAR(200),
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);

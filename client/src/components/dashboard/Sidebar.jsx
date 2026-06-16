@@ -1,118 +1,148 @@
-import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  LayoutDashboard, FileSearch, Settings, ShieldCheck,
-  LogOut, ChevronLeft, ChevronRight,
-} from 'lucide-react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { NavLink } from 'react-router-dom'
+import { LayoutDashboard, FileText, Settings } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { key: 'dashboard',    label: 'Inicio',          icon: LayoutDashboard, path: '/dashboard' },
-  { key: 'licitaciones', label: 'Licitaciones',     icon: FileSearch,      path: '/dashboard/licitaciones' },
-  { key: 'configuracion',label: 'Configuración',    icon: Settings,        path: '/dashboard/configuracion' },
+  { to: '/dashboard', label: 'Inicio', icon: LayoutDashboard, end: true },
+  { to: '/dashboard/licitaciones', label: 'Licitaciones', icon: FileText, end: false },
+  { to: '/dashboard/configuracion', label: 'Configuración', icon: Settings, end: false },
 ]
-const ADMIN_ITEM = { key: 'admin', label: 'Admin', icon: ShieldCheck, path: '/dashboard/admin' }
 
-export default function Sidebar({ collapsed, onToggle }) {
-  const { usuario, logout } = useAuth()
-  const location = useLocation()
-  const navigate = useNavigate()
-
-  const items = usuario?.rol === 'superadmin' ? [...NAV_ITEMS, ADMIN_ITEM] : NAV_ITEMS
-  const initials = usuario?.nombre
-    ? usuario.nombre.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    : '?'
-
-  function isActive(item) {
-    if (item.path === '/dashboard') return location.pathname === '/dashboard'
-    return location.pathname.startsWith(item.path)
-  }
-
+export default function Sidebar() {
   return (
     <aside
+      className="dash-sidebar"
       style={{
-        width: collapsed ? 56 : 220,
-        transition: 'width 0.2s var(--ease)',
+        width: 200,
+        flexShrink: 0,
+        background: '#1B2B1F',
         minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         position: 'fixed',
-        left: 0,
         top: 0,
-        zIndex: 30,
+        left: 0,
+        bottom: 0,
+        zIndex: 60,
       }}
-      className="bg-surface border-r border-border flex flex-col"
     >
       {/* Logo */}
       <div
-        className="flex items-center border-b border-border shrink-0"
-        style={{ height: 56, padding: collapsed ? '0' : '0 16px', justifyContent: collapsed ? 'center' : 'flex-start' }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '20px 16px',
+          height: 56,
+          boxSizing: 'border-box',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}
       >
-        {collapsed ? (
-          <span className="w-7 h-7 rounded-md bg-brand flex items-center justify-center text-white text-xs font-bold">L</span>
-        ) : (
-          <span className="font-semibold text-ink text-[15px] tracking-tight">LiciTraker</span>
-        )}
+        <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+          <polygon
+            points="14,2 25,8 25,20 14,26 3,20 3,8"
+            fill="none"
+            stroke="var(--g500)"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <circle cx="14" cy="14" r="3.5" fill="var(--g500)" />
+        </svg>
+        <span
+          className="dash-sidebar-label"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 16,
+            fontWeight: 800,
+            color: '#fff',
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          LiciTracker
+        </span>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
-        {items.map(item => {
-          const Icon = item.icon
-          const active = isActive(item)
-          return (
-            <button
-              key={item.key}
-              onClick={() => navigate(item.path)}
-              title={collapsed ? item.label : undefined}
-              className={[
-                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-all duration-150',
-                active ? 'bg-brand-light text-brand' : 'text-ink-2 hover:text-ink hover:bg-subtle',
-                collapsed ? 'justify-center' : '',
-              ].join(' ')}
-            >
-              <Icon size={16} className="shrink-0" />
-              {!collapsed && item.label}
-            </button>
-          )
-        })}
+      {/* Navegación */}
+      <nav style={{ flex: 1, padding: '16px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            title={label}
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '10px 12px',
+              borderRadius: 'var(--r-md)',
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: 'var(--font-body)',
+              textDecoration: 'none',
+              borderLeft: isActive ? '3px solid #5A9A6E' : '3px solid transparent',
+              background: isActive ? 'rgba(61,122,79,0.35)' : 'transparent',
+              color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+              transition: 'background var(--transition), color var(--transition)',
+            })}
+          >
+            <Icon size={18} style={{ flexShrink: 0 }} />
+            <span className="dash-sidebar-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
+          </NavLink>
+        ))}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-border p-2 space-y-1 shrink-0">
-        {!collapsed && (
-          <div className="flex items-center gap-2.5 px-2.5 py-1.5 mb-1">
-            <div className="w-6 h-6 rounded-full bg-brand flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-ink truncate">{usuario?.nombre ?? 'Usuario'}</p>
-              <p className="text-[11px] text-ink-3 truncate">{usuario?.empresa ?? ''}</p>
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={logout}
-          title={collapsed ? 'Cerrar sesión' : undefined}
-          className={[
-            'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-3 hover:text-danger hover:bg-danger-light transition-colors',
-            collapsed ? 'justify-center' : '',
-          ].join(' ')}
+      {/* Avatar empresa */}
+      <div
+        style={{
+          padding: 16,
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}
+        title="Constructora García"
+      >
+        <div
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
+            background: 'var(--verde-medio)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 12,
+            fontWeight: 700,
+            fontFamily: 'var(--font-titulo)',
+            flexShrink: 0,
+          }}
         >
-          <LogOut size={14} />
-          {!collapsed && 'Cerrar sesión'}
-        </button>
-
-        <button
-          onClick={onToggle}
-          title={collapsed ? 'Expandir' : 'Colapsar'}
-          className={[
-            'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-3 hover:text-ink-2 hover:bg-subtle transition-colors',
-            collapsed ? 'justify-center' : 'justify-between',
-          ].join(' ')}
+          CG
+        </div>
+        <span
+          className="dash-sidebar-label"
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.7)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
         >
-          {!collapsed && <span>Colapsar</span>}
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </button>
+          Constructora García
+        </span>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .dash-sidebar { width: 64px !important; }
+          .dash-sidebar-label { display: none !important; }
+          .dash-content { margin-left: 64px !important; }
+        }
+      `}</style>
     </aside>
   )
 }
