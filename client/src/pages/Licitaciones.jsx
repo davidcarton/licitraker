@@ -1,134 +1,85 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { SearchX, WifiOff, AlertTriangle, Sparkles, Bookmark, BookmarkCheck, Hash, Search } from 'lucide-react'
+import { SearchX, WifiOff, Sparkles, Bookmark, BookmarkCheck, Hash, RefreshCw } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
-import FiltroBarra from '../components/ui/FiltroBarra.jsx'
-import LicitacionCard from '../components/cards/LicitacionCard.jsx'
-import LicitacionModal from '../components/cards/LicitacionModal.jsx'
+import DataTable from '../components/ui/DataTable.jsx'
+import SearchInput from '../components/ui/SearchInput.jsx'
+import Badge from '../components/ui/Badge.jsx'
+import SlideOver from '../components/ui/SlideOver.jsx'
 import Spinner from '../components/ui/Spinner.jsx'
-import BlueprintFrame from '../components/ui/BlueprintFrame.jsx'
-import { tipoBadge } from '../utils/format.js'
+import { tipoBadge, diasRestantes, formatImporte } from '../utils/format.js'
 import { useApp } from '../context/AppContext.jsx'
 
-const inputBase = {
-  width: '100%',
-  padding: '9px 12px 9px 34px',
-  border: '1.5px solid var(--n100)',
-  borderRadius: 'var(--r-md)',
-  fontSize: 13,
-  background: 'var(--n50)',
-  color: 'var(--n900)',
-  transition: 'border-color var(--transition), box-shadow var(--transition), background var(--transition)',
+const BADGE_VARIANT = {
+  urgente:  'urgente',
+  proximo:  'proximo',
+  enplazo:  'enplazo',
+  sinplazo: 'sinplazo',
 }
 
-function BarraBusquedaCPV({ valor, onChange, onBuscar, cargando }) {
-  const [focused, setFocused] = useState(false)
+const IMPORTES = [
+  { value: '',       label: 'Todos los importes' },
+  { value: 'menos50', label: '< 50.000 €' },
+  { value: '50a200',  label: '50.000 – 200.000 €' },
+  { value: '200a1m',  label: '200.000 – 1.000.000 €' },
+  { value: 'mas1m',   label: '> 1.000.000 €' },
+]
 
-  return (
-    <div style={{
-      background: '#fff',
-      borderBottom: '1px solid var(--n100)',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-      padding: '12px clamp(1.25rem, 4vw, 2.5rem)',
-    }}>
-      <div style={{
-        maxWidth: 1300,
-        margin: '0 auto',
-        display: 'flex',
-        gap: 10,
-        flexWrap: 'wrap',
-        alignItems: 'center',
-      }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 240 }}>
-          <Hash size={15} style={{
-            position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-            color: 'var(--n300)', pointerEvents: 'none',
-          }} />
-          <input
-            type="text"
-            value={valor}
-            placeholder="Buscar por código CPV (ej: 45233141)"
-            onChange={e => onChange(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') onBuscar() }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            style={{
-              ...inputBase,
-              ...(focused ? { borderColor: 'var(--g500)', background: '#fff', boxShadow: '0 0 0 3px var(--g100)' } : {}),
-            }}
-          />
-        </div>
+function DetalleLicitacion({ licitacion: l, guardada, onToggleGuardar, onResumenIA }) {
+  if (!l) return null
+  const dias = diasRestantes(l.fechaLimite)
+  const importe = formatImporte(l.importe)
+  const variant = BADGE_VARIANT[tipoBadge(l.fechaLimite)] ?? 'neutral'
 
-        <button
-          onClick={onBuscar}
-          disabled={cargando}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            background: 'var(--g700)', color: '#fff',
-            borderRadius: 'var(--r-md)', padding: '9px 18px',
-            fontSize: 13, fontWeight: 600,
-            transition: 'background var(--transition), transform var(--transition)',
-            whiteSpace: 'nowrap',
-            opacity: cargando ? 0.7 : 1,
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--g800)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'var(--g700)'; e.currentTarget.style.transform = 'translateY(0)' }}
-        >
-          <Search size={14} />
-          {cargando ? 'Buscando...' : 'Buscar CPV'}
-        </button>
-      </div>
+  const campo = (label, valor) => (
+    <div className="py-3 border-b border-border last:border-0">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3 mb-1">{label}</p>
+      <p className="text-sm text-ink leading-relaxed">{valor || '—'}</p>
     </div>
   )
-}
 
-function TarjetaLicitacion({ licitacion: l, index: i, guardada, onSeleccionar, onToggleGuardar, navigate }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: Math.min(i * 0.035, 0.5) }}
-      style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 380 }}
-    >
-      <LicitacionCard licitacion={l} onClick={() => onSeleccionar(l)} />
+    <div>
+      <div className="flex gap-2 mb-5">
+        <Badge variant={variant}>
+          {tipoBadge(l.fechaLimite)}{dias !== null ? ` · ${dias}d` : ''}
+        </Badge>
+      </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <h3 className="text-base font-semibold text-ink leading-snug mb-5">{l.titulo}</h3>
+
+      <div className="flex gap-2 mb-6">
         <button
-          onClick={(e) => { e.stopPropagation(); navigate('/dashboard/resumen', { state: { licitacion: l } }) }}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '8px 12px',
-            borderRadius: 'var(--r-md)',
-            background: '#EAF4EE',
-            color: '#2A5938',
-            border: '1px solid #3D7A4F',
-            fontSize: 12, fontWeight: 700,
-            fontFamily: 'var(--font-body)',
-          }}
+          onClick={onResumenIA}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-semibold bg-brand text-white hover:bg-brand-hover transition-colors"
         >
           <Sparkles size={13} />
           Resumen IA
         </button>
-
         <button
-          onClick={(e) => { e.stopPropagation(); onToggleGuardar(l) }}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '8px 12px',
-            borderRadius: 'var(--r-md)',
-            background: guardada ? 'var(--verde-claro)' : 'var(--n100)',
-            color: guardada ? 'var(--verde)' : 'var(--n500)',
-            border: guardada ? '1px solid var(--g200)' : '1px solid transparent',
-            fontSize: 12, fontWeight: 700,
-            fontFamily: 'var(--font-body)',
-          }}
+          onClick={onToggleGuardar}
+          className={[
+            'flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-semibold border transition-colors',
+            guardada
+              ? 'bg-brand-light text-brand border-brand-mid hover:bg-brand-mid'
+              : 'bg-subtle text-ink-2 border-border hover:bg-muted',
+          ].join(' ')}
         >
-          {guardada ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+          {guardada ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
           {guardada ? 'Guardada' : 'Guardar'}
         </button>
       </div>
-    </motion.div>
+
+      <div>
+        {campo('Organismo', l.organismo)}
+        {campo('Provincia', l.provincia)}
+        {campo('Presupuesto', importe ? `${importe} €` : null)}
+        {campo('Fecha límite', l.fechaLimite)}
+        {campo('Expediente', l.expediente)}
+        {campo('Código CPV', l.cpv)}
+        {l.descripcion && campo('Descripción', l.descripcion)}
+      </div>
+    </div>
   )
 }
 
@@ -154,80 +105,40 @@ export default function Licitaciones() {
 
   const cargarDatos = useCallback(() => {
     fetch('/api/licitaciones')
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) throw new Error(data.error)
-        setLicitaciones(data.licitaciones || [])
-        setError(null)
-      })
+      .then(r => r.json())
+      .then(d => { if (d.error) throw new Error(d.error); setLicitaciones(d.licitaciones || []); setError(null) })
       .catch(e => setError(e.message))
       .finally(() => setCargando(false))
   }, [])
 
   useEffect(() => {
-    const tituloPrevio = document.title
-    document.title = 'LiciTracker · Licitaciones'
+    document.title = 'LiciTraker · Licitaciones'
     cargarDatos()
-    return () => { document.title = tituloPrevio }
+    return () => { document.title = 'LiciTraker' }
   }, [cargarDatos])
 
   const actualizar = () => {
-    setCargando(true)
-    setError(null)
+    setCargando(true); setError(null)
     fetch('/api/licitaciones?refresh=1')
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) throw new Error(data.error)
-        setLicitaciones(data.licitaciones || [])
-      })
+      .then(r => r.json())
+      .then(d => { if (d.error) throw new Error(d.error); setLicitaciones(d.licitaciones || []) })
       .catch(e => setError(e.message))
       .finally(() => setCargando(false))
   }
 
-  const handleCpvChange = (valor) => {
-    setCpvQuery(valor)
-    if (!valor.trim()) {
-      setCpvResultados(null)
-      setCpvBuscadoCodigo('')
-      setCpvError(null)
-    }
-  }
-
   const buscarCPV = useCallback(() => {
     const codigo = cpvQuery.trim()
-
-    if (!codigo) {
-      setCpvResultados(null)
-      setCpvBuscadoCodigo('')
-      setCpvError(null)
-      return
-    }
-
-    if (!/^\d{2,}$/.test(codigo)) {
-      setCpvError('Introduce un código CPV válido (solo números, mínimo 2 dígitos)')
-      return
-    }
-
-    setCpvError(null)
-    setCpvCargando(true)
+    if (!codigo) { setCpvResultados(null); setCpvBuscadoCodigo(''); setCpvError(null); return }
+    if (!/^\d{2,}$/.test(codigo)) { setCpvError('Código CPV inválido (solo números, mínimo 2 dígitos)'); return }
+    setCpvError(null); setCpvCargando(true)
     fetch(`/api/buscar-cpv?codigo=${encodeURIComponent(codigo)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) throw new Error(data.error)
-        setCpvResultados(data.licitaciones || [])
-        setCpvBuscadoCodigo(codigo)
-      })
+      .then(r => r.json())
+      .then(d => { if (d.error) throw new Error(d.error); setCpvResultados(d.licitaciones || []); setCpvBuscadoCodigo(codigo) })
       .catch(e => setCpvError(e.message))
       .finally(() => setCpvCargando(false))
   }, [cpvQuery])
 
-  const provincias = useMemo(() => {
-    return [...new Set(
-      licitaciones
-        .map(l => l.provincia)
-        .filter(Boolean)
-    )].sort()
-  }, [licitaciones])
+  const provincias = useMemo(() => [...new Set(licitaciones.map(l => l.provincia).filter(Boolean))].sort(), [licitaciones])
 
   const licitacionesFiltradas = useMemo(() => {
     return licitaciones.filter(l => {
@@ -243,7 +154,7 @@ export default function Licitaciones() {
       if (filtroImporte && l.importe != null) {
         const imp = parseFloat(l.importe)
         if (filtroImporte === 'menos50' && imp >= 50000) return false
-        if (filtroImporte === '50a200'  && (imp < 50000  || imp >= 200000))  return false
+        if (filtroImporte === '50a200'  && (imp < 50000  || imp >= 200000)) return false
         if (filtroImporte === '200a1m'  && (imp < 200000 || imp >= 1000000)) return false
         if (filtroImporte === 'mas1m'   && imp < 1000000) return false
       }
@@ -252,156 +163,186 @@ export default function Licitaciones() {
     })
   }, [licitaciones, textoBusqueda, filtroUrgencia, filtroImporte, filtroProvincia])
 
-  const mostrandoCPV = cpvResultados !== null
+  const listaActiva = cpvResultados !== null ? cpvResultados : licitacionesFiltradas
 
-  const renderGrid = (lista) => (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-        gap: 20,
-      }}
-    >
-      {lista.map((l, i) => (
-        <TarjetaLicitacion
-          key={l.expediente || `${l.titulo}-${i}`}
-          licitacion={l}
-          index={i}
-          guardada={licitacionesGuardadas.some(g => g.expediente === l.expediente)}
-          onSeleccionar={setSeleccionada}
-          onToggleGuardar={(lic) => (
-            licitacionesGuardadas.some(g => g.expediente === lic.expediente)
-              ? quitarLicitacion(lic.expediente)
-              : guardarLicitacion(lic)
-          )}
-          navigate={navigate}
-        />
-      ))}
-    </motion.div>
-  )
+  const isGuardada = (l) => licitacionesGuardadas.some(g => g.expediente === l.expediente)
+  const toggleGuardar = (l) => isGuardada(l) ? quitarLicitacion(l.expediente) : guardarLicitacion(l)
+
+  const columns = [
+    {
+      key: 'fechaLimite',
+      label: '',
+      render: (v) => {
+        const tipo = tipoBadge(v)
+        return <Badge variant={BADGE_VARIANT[tipo] ?? 'neutral'} showDot={false} className="text-[10px]">{tipo}</Badge>
+      },
+    },
+    {
+      key: 'titulo',
+      label: 'Licitación',
+      render: (v, row) => (
+        <div>
+          <p className="font-medium text-ink text-sm line-clamp-2 max-w-sm">{v || 'Sin título'}</p>
+          <p className="text-xs text-ink-3 mt-0.5">{row.organismo || '—'}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'importe',
+      label: 'Presupuesto',
+      align: 'right',
+      mono: true,
+      sortable: true,
+      render: (v) => {
+        const f = formatImporte(v)
+        return f ? <span className="text-ink font-medium">{f} €</span> : <span className="text-ink-3 text-xs">—</span>
+      },
+    },
+    {
+      key: 'fechaLimite',
+      label: 'Días',
+      align: 'right',
+      sortable: true,
+      render: (v) => {
+        const d = diasRestantes(v)
+        if (d === null) return <span className="text-ink-3 text-xs">—</span>
+        const variant = d < 3 ? 'urgente' : d <= 7 ? 'proximo' : 'enplazo'
+        return <Badge variant={variant}>{d}d</Badge>
+      },
+    },
+    {
+      key: '_acciones',
+      label: '',
+      render: (_, row) => (
+        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+          <button
+            onClick={() => navigate('/dashboard/resumen', { state: { licitacion: row } })}
+            className="p-1.5 rounded text-ink-3 hover:text-brand hover:bg-brand-light transition-colors"
+            title="Resumen IA"
+          >
+            <Sparkles size={14} />
+          </button>
+          <button
+            onClick={() => toggleGuardar(row)}
+            className={`p-1.5 rounded transition-colors ${isGuardada(row) ? 'text-brand' : 'text-ink-3 hover:text-brand hover:bg-brand-light'}`}
+            title={isGuardada(row) ? 'Quitar' : 'Guardar'}
+          >
+            {isGuardada(row) ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   return (
-    <DashboardLayout
-      title="Licitaciones"
-      filtros={(
-        <>
-          <FiltroBarra
-            onBuscar={setTextoBusqueda}
-            onFiltroUrgencia={setFiltroUrgencia}
-            onFiltroImporte={setFiltroImporte}
-            onFiltroProvincia={setFiltroProvincia}
-            provincias={provincias}
-            onActualizar={actualizar}
-            cargando={cargando}
+    <DashboardLayout title="Licitaciones">
+      {/* Barra de filtros */}
+      <div className="flex flex-wrap gap-3 mb-5 p-4 bg-surface border border-border rounded-lg">
+        <SearchInput
+          value={textoBusqueda}
+          onChange={setTextoBusqueda}
+          placeholder="Buscar título u organismo..."
+          onClear={() => setTextoBusqueda('')}
+          className="flex-1 min-w-48"
+        />
+
+        {/* CPV search */}
+        <div className="relative flex items-center min-w-44">
+          <Hash size={14} className="absolute left-3 text-ink-3 pointer-events-none" />
+          <input
+            type="text"
+            value={cpvQuery}
+            onChange={e => setCpvQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && buscarCPV()}
+            placeholder="Código CPV..."
+            className="w-full pl-8 pr-3 py-2 bg-surface border border-border rounded-md text-sm text-ink placeholder:text-ink-3 outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
           />
-          <BarraBusquedaCPV
-            valor={cpvQuery}
-            onChange={handleCpvChange}
-            onBuscar={buscarCPV}
-            cargando={cpvCargando}
-          />
-        </>
-      )}
-    >
-      {mostrandoCPV ? (
-        <>
-          {cpvCargando && <Spinner />}
+        </div>
 
-          {cpvError && !cpvCargando && (
-            <div style={{
-              background: 'var(--rojo-bg)',
-              border: '1px solid var(--rojo-borde)',
-              borderRadius: 'var(--r-lg)',
-              padding: '16px 20px',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <BlueprintFrame size={36} color="var(--rojo-borde)">
-                <AlertTriangle size={16} color="var(--rojo)" />
-              </BlueprintFrame>
-              <span style={{ fontSize: 13, color: 'var(--rojo)', fontWeight: 500 }}>
-                {cpvError}
-              </span>
-            </div>
-          )}
+        <select
+          value={filtroProvincia}
+          onChange={e => setFiltroProvincia(e.target.value)}
+          className="py-2 px-3 bg-surface border border-border rounded-md text-sm text-ink outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
+        >
+          <option value="">Todas las provincias</option>
+          {provincias.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
 
-          {!cpvCargando && !cpvError && (
-            <>
-              <p style={{ fontSize: 13, color: 'var(--n500)', fontWeight: 600, marginBottom: 16 }}>
-                {cpvResultados.length} licitaciones encontradas para CPV {cpvBuscadoCodigo}
-              </p>
+        <select
+          value={filtroImporte}
+          onChange={e => setFiltroImporte(e.target.value)}
+          className="py-2 px-3 bg-surface border border-border rounded-md text-sm text-ink outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
+        >
+          {IMPORTES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
 
-              {cpvResultados.length === 0 ? (
-                <div style={{
-                  minHeight: 300,
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                  gap: 12,
-                }}>
-                  <BlueprintFrame size={96}>
-                    <SearchX size={36} color="var(--n300)" />
-                  </BlueprintFrame>
-                  <span style={{ fontFamily: 'var(--font-titulo)', fontSize: 16, fontWeight: 700, color: 'var(--n500)' }}>
-                    No hay licitaciones en plazo con ese código CPV
-                  </span>
-                  <span style={{ fontSize: 13, color: 'var(--n300)' }}>
-                    Prueba con un código más corto o distinto
-                  </span>
-                </div>
-              ) : renderGrid(cpvResultados)}
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          {cargando && <Spinner />}
+        <button
+          onClick={cpvResultados !== null ? buscarCPV : actualizar}
+          disabled={cargando || cpvCargando}
+          className="p-2 rounded-md text-ink-3 hover:text-brand hover:bg-brand-light border border-border transition-colors disabled:opacity-50"
+          title="Actualizar"
+        >
+          <RefreshCw size={15} className={(cargando || cpvCargando) ? 'animate-spin' : ''} />
+        </button>
+      </div>
 
-          {error && !cargando && (
-            <div style={{
-              background: 'var(--rojo-bg)',
-              border: '1px solid var(--rojo-borde)',
-              borderRadius: 'var(--r-lg)',
-              padding: '16px 20px',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <BlueprintFrame size={36} color="var(--rojo-borde)">
-                <WifiOff size={16} color="var(--rojo)" />
-              </BlueprintFrame>
-              <span style={{ fontSize: 13, color: 'var(--rojo)', fontWeight: 500 }}>
-                No se ha podido conectar con el servidor de licitaciones.
-                Asegúrate de que el servidor está arrancado e inténtalo de nuevo.
-              </span>
-            </div>
-          )}
-
-          {!cargando && !error && licitacionesFiltradas.length === 0 && (
-            <div style={{
-              minHeight: 300,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 12,
-            }}>
-              <BlueprintFrame size={96}>
-                <SearchX size={36} color="var(--n300)" />
-              </BlueprintFrame>
-              <span style={{ fontFamily: 'var(--font-titulo)', fontSize: 16, fontWeight: 700, color: 'var(--n500)' }}>
-                No hay licitaciones con estos filtros
-              </span>
-              <span style={{ fontSize: 13, color: 'var(--n300)' }}>
-                Prueba a ampliar la búsqueda o eliminar algún filtro
-              </span>
-            </div>
-          )}
-
-          {!cargando && !error && licitacionesFiltradas.length > 0 && renderGrid(licitacionesFiltradas)}
-        </>
+      {/* Estado: errores */}
+      {(error || cpvError) && (
+        <div className="flex items-center gap-3 p-4 mb-4 bg-danger-light border border-danger-border rounded-lg text-sm text-danger">
+          <WifiOff size={16} className="shrink-0" />
+          {error || cpvError}
+        </div>
       )}
 
-      <AnimatePresence>
-        {seleccionada && (
-          <LicitacionModal licitacion={seleccionada} onCerrar={() => setSeleccionada(null)} />
-        )}
-      </AnimatePresence>
+      {/* Estado: cargando */}
+      {(cargando || cpvCargando) && <Spinner />}
+
+      {/* Contador CPV */}
+      {cpvResultados !== null && !cpvCargando && (
+        <p className="text-xs text-ink-3 mb-3">
+          {cpvResultados.length} licitaciones para CPV {cpvBuscadoCodigo}
+          {' · '}
+          <button
+            onClick={() => { setCpvResultados(null); setCpvQuery(''); setCpvBuscadoCodigo('') }}
+            className="text-brand hover:underline"
+          >
+            Limpiar
+          </button>
+        </p>
+      )}
+
+      {/* Estado vacío */}
+      {!cargando && !cpvCargando && !error && listaActiva.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-24 gap-3 text-ink-3">
+          <SearchX size={36} className="opacity-40" />
+          <p className="font-medium text-sm">No hay licitaciones con estos filtros</p>
+          <p className="text-xs">Prueba a ampliar la búsqueda</p>
+        </div>
+      )}
+
+      {/* Tabla */}
+      {!cargando && !cpvCargando && listaActiva.length > 0 && (
+        <DataTable
+          columns={columns}
+          data={listaActiva}
+          onRowClick={setSeleccionada}
+          emptyMessage="Sin licitaciones"
+        />
+      )}
+
+      {/* SlideOver de detalle */}
+      <SlideOver
+        open={seleccionada !== null}
+        onClose={() => setSeleccionada(null)}
+        title={seleccionada?.titulo ?? ''}
+      >
+        <DetalleLicitacion
+          licitacion={seleccionada}
+          guardada={seleccionada ? isGuardada(seleccionada) : false}
+          onToggleGuardar={() => seleccionada && toggleGuardar(seleccionada)}
+          onResumenIA={() => { navigate('/dashboard/resumen', { state: { licitacion: seleccionada } }); setSeleccionada(null) }}
+        />
+      </SlideOver>
     </DashboardLayout>
   )
 }
