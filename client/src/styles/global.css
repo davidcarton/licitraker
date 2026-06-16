@@ -178,3 +178,17 @@
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.9; }
+}
+
+/* ─── Sidebar gradient variables ──────────────────────────────────────────────── */
+:root {
+  --sidebar-gradient: linear-gradient(180deg, #3d9465 0%, #1e5538 42%, #0f2d1c 100%);
+  --sidebar-item-hover: rgba(255,255,255,0.08);
+  --sidebar-item-active: rgba(255,255,255,0.14);
+  --sidebar-text: rgba(255,255,255,0.62);
+  --sidebar-accent: #86efac;
+}
