@@ -138,9 +138,9 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
             {importeNum ? (
               <span
                 style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 20,
-                  fontWeight: 800 /* Modificado para Syne 800 */,
+                  fontFamily: "var(--font-titulo)",
+                  fontSize: 18,
+                  fontWeight: 700,
                   color: "var(--g700)",
                   lineHeight: 1,
                 }}
