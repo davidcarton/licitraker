@@ -4,9 +4,10 @@ import Tabs from '../components/ui/Tabs.jsx'
 import { Save } from 'lucide-react'
 
 const TABS = [
-  { id: 'perfil',         label: 'Perfil' },
-  { id: 'notificaciones', label: 'Notificaciones' },
-  { id: 'crm',            label: 'Integrar CRM' },
+  { id: 'perfil',          label: 'Perfil' },
+  { id: 'preferencias',    label: 'Preferencias' },
+  { id: 'notificaciones',  label: 'Notificaciones' },
+  { id: 'crm',             label: 'Integrar CRM' },
 ]
 
 const TIPOS_OBRA = [
@@ -146,6 +147,49 @@ export default function Configuracion() {
                   className="w-full px-3 py-2 border border-border rounded-md text-sm text-ink outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                 />
               </div>
+              <SaveButton />
+            </div>
+          )}
+
+          {tab === 'preferencias' && (
+            <div className="space-y-7">
+              <div>
+                <SectionLabel>Tipos de obra</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {TIPOS_OBRA.map(t => (
+                    <Chip key={t} active={tiposActivos.has(t)} onClick={() => toggleSet(setTiposActivos, t)}>{t}</Chip>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <SectionLabel>Provincias de interés</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {PROVINCIAS.map(p => (
+                    <Chip key={p} active={provinciasActivas.has(p)} onClick={() => toggleSet(setProvinciasActivas, p)}>{p}</Chip>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <SectionLabel>Plazos de urgencia</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {PLAZOS.map(p => (
+                    <Chip key={p.value} active={plazosActivos.has(p.value)} onClick={() => toggleSet(setPlazosActivos, p.value)}>{p.label}</Chip>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <SectionLabel>Importe mínimo (€)</SectionLabel>
+                <input
+                  type="number"
+                  value={importeMin}
+                  onChange={e => setImporteMin(e.target.value)}
+                  className="w-40 px-3 py-2 border border-border rounded-md text-sm font-mono text-ink outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
+                />
+              </div>
+
               <SaveButton />
             </div>
           )}

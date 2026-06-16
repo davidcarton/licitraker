@@ -16,61 +16,32 @@ export default function KPICard({
       type="button"
       onClick={onClick}
       className={[
-        'text-left w-full transition-all duration-200',
-        onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : 'cursor-default',
+        'text-left w-full bg-surface border border-border rounded-lg p-5 transition-all duration-200',
+        onClick ? 'hover:shadow-md hover:border-border-strong cursor-pointer' : 'cursor-default',
       ].join(' ')}
-      style={{
-        background: 'var(--bg-surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 14,
-        padding: '22px 24px',
-        boxShadow: 'var(--shadow-sm)',
-      }}
+      style={{ boxShadow: 'var(--shadow-xs)' }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+      <div className="flex items-start justify-between mb-4">
         {Icon && (
-          <div style={{
-            width: 40, height: 40,
-            borderRadius: 11,
-            background: 'var(--brand-light)',
-            border: '1px solid var(--brand-mid)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon size={19} strokeWidth={1.75} style={{ color: 'var(--brand)' }} />
+          <div className="p-2 bg-subtle rounded-md">
+            <Icon size={16} className="text-ink-2" />
           </div>
         )}
         {trendLabel && (
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 3,
-            fontSize: 11, fontWeight: 600,
-            color: isUp ? 'var(--success)' : isDown ? 'var(--danger)' : 'var(--text-muted)',
-          }}>
-            {isUp && <TrendingUp size={11} />}
-            {isDown && <TrendingDown size={11} />}
+          <span className={[
+            'inline-flex items-center gap-0.5 text-xs font-medium',
+            isUp ? 'text-success' : isDown ? 'text-danger' : 'text-ink-3',
+          ].join(' ')}>
+            {isUp && <TrendingUp size={12} />}
+            {isDown && <TrendingDown size={12} />}
             {trendLabel}
           </span>
         )}
       </div>
-
-      <p style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: 32,
-        fontWeight: 700,
-        color: 'var(--text-primary)',
-        lineHeight: 1,
-        letterSpacing: '-0.04em',
-        marginBottom: 7,
-      }}>
+      <p className="font-mono text-2xl font-semibold text-ink leading-none mb-1.5">
         {value}
       </p>
-
-      <p style={{
-        fontSize: 11,
-        fontWeight: 600,
-        color: 'var(--text-muted)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.07em',
-      }}>
+      <p className="text-xs font-medium text-ink-3 uppercase tracking-wide">
         {label}
       </p>
     </button>

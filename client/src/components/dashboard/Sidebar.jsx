@@ -1,18 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FileSearch, Settings, ShieldCheck,
-  LogOut, ChevronLeft, ChevronRight, Building2,
+  LogOut, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 
 const NAV_ITEMS = [
-  { key: 'dashboard',    label: 'Inicio',       icon: LayoutDashboard, path: '/dashboard' },
-  { key: 'licitaciones', label: 'Licitaciones', icon: FileSearch,      path: '/dashboard/licitaciones' },
-  { key: 'configuracion',label: 'Configuración',icon: Settings,        path: '/dashboard/configuracion' },
+  { key: 'dashboard',    label: 'Inicio',          icon: LayoutDashboard, path: '/dashboard' },
+  { key: 'licitaciones', label: 'Licitaciones',     icon: FileSearch,      path: '/dashboard/licitaciones' },
+  { key: 'configuracion',label: 'Configuración',    icon: Settings,        path: '/dashboard/configuracion' },
 ]
 const ADMIN_ITEM = { key: 'admin', label: 'Admin', icon: ShieldCheck, path: '/dashboard/admin' }
-
-const GRADIENT = 'linear-gradient(180deg, #3d9465 0%, #1e5538 42%, #0f2d1c 100%)'
 
 export default function Sidebar({ collapsed, onToggle }) {
   const { usuario, logout } = useAuth()
@@ -33,210 +31,88 @@ export default function Sidebar({ collapsed, onToggle }) {
     <aside
       style={{
         width: collapsed ? 56 : 220,
-        transition: 'width 0.2s cubic-bezier(0.4,0,0.2,1)',
+        transition: 'width 0.2s var(--ease)',
         minHeight: '100vh',
         position: 'fixed',
-        left: 0, top: 0,
+        left: 0,
+        top: 0,
         zIndex: 30,
-        background: GRADIENT,
-        display: 'flex',
-        flexDirection: 'column',
       }}
+      className="bg-surface border-r border-border flex flex-col"
     >
       {/* Logo */}
-      <div style={{
-        height: 56,
-        padding: collapsed ? '0' : '0 14px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: collapsed ? 'center' : 'flex-start',
-        borderBottom: '1px solid rgba(255,255,255,0.10)',
-        flexShrink: 0,
-      }}>
+      <div
+        className="flex items-center border-b border-border shrink-0"
+        style={{ height: 56, padding: collapsed ? '0' : '0 16px', justifyContent: collapsed ? 'center' : 'flex-start' }}
+      >
         {collapsed ? (
-          <div style={{
-            width: 30, height: 30, borderRadius: 8,
-            background: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Building2 size={15} color="white" strokeWidth={2} />
-          </div>
+          <span className="w-7 h-7 rounded-md bg-brand flex items-center justify-center text-white text-xs font-bold">L</span>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 8,
-              background: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.22)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Building2 size={15} color="white" strokeWidth={2} />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.025em', color: 'white' }}>
-              LiciTraker
-            </span>
-          </div>
+          <span className="font-semibold text-ink text-[15px] tracking-tight">LiciTraker</span>
         )}
       </div>
 
       {/* Nav */}
-      <nav style={{
-        flex: 1, padding: '10px 8px',
-        display: 'flex', flexDirection: 'column', gap: 2,
-        overflowY: 'auto',
-      }}>
+      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {items.map(item => {
           const Icon = item.icon
           const active = isActive(item)
           return (
-            <NavItem
+            <button
               key={item.key}
-              icon={Icon}
-              label={item.label}
-              active={active}
-              collapsed={collapsed}
               onClick={() => navigate(item.path)}
               title={collapsed ? item.label : undefined}
-            />
+              className={[
+                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-all duration-150',
+                active ? 'bg-brand-light text-brand' : 'text-ink-2 hover:text-ink hover:bg-subtle',
+                collapsed ? 'justify-center' : '',
+              ].join(' ')}
+            >
+              <Icon size={16} className="shrink-0" />
+              {!collapsed && item.label}
+            </button>
           )
         })}
       </nav>
 
       {/* Footer */}
-      <div style={{
-        borderTop: '1px solid rgba(255,255,255,0.10)',
-        padding: '8px',
-        flexShrink: 0,
-      }}>
+      <div className="border-t border-border p-2 space-y-1 shrink-0">
         {!collapsed && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '8px 10px', marginBottom: 4,
-          }}>
-            <div style={{
-              width: 26, height: 26, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.18)',
-              border: '1px solid rgba(255,255,255,0.28)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontSize: 10, fontWeight: 700, flexShrink: 0,
-            }}>
+          <div className="flex items-center gap-2.5 px-2.5 py-1.5 mb-1">
+            <div className="w-6 h-6 rounded-full bg-brand flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
               {initials}
             </div>
-            <div style={{ minWidth: 0 }}>
-              <p style={{
-                fontSize: 12, fontWeight: 600, color: 'white',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {usuario?.nombre ?? 'Usuario'}
-              </p>
-              <p style={{
-                fontSize: 11, color: 'rgba(255,255,255,0.50)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {usuario?.empresa?.nombre ?? ''}
-              </p>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-ink truncate">{usuario?.nombre ?? 'Usuario'}</p>
+              <p className="text-[11px] text-ink-3 truncate">{usuario?.empresa ?? ''}</p>
             </div>
           </div>
         )}
 
-        <FooterBtn
-          icon={<LogOut size={13} />}
-          label="Cerrar sesión"
-          collapsed={collapsed}
+        <button
           onClick={logout}
           title={collapsed ? 'Cerrar sesión' : undefined}
-          danger
-        />
-        <FooterBtn
-          icon={collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
-          label="Colapsar"
-          collapsed={collapsed}
+          className={[
+            'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-3 hover:text-danger hover:bg-danger-light transition-colors',
+            collapsed ? 'justify-center' : '',
+          ].join(' ')}
+        >
+          <LogOut size={14} />
+          {!collapsed && 'Cerrar sesión'}
+        </button>
+
+        <button
           onClick={onToggle}
           title={collapsed ? 'Expandir' : 'Colapsar'}
-          rightAlign
-        />
+          className={[
+            'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-ink-3 hover:text-ink-2 hover:bg-subtle transition-colors',
+            collapsed ? 'justify-center' : 'justify-between',
+          ].join(' ')}
+        >
+          {!collapsed && <span>Colapsar</span>}
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </div>
     </aside>
-  )
-}
-
-function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        width: '100%',
-        display: 'flex', alignItems: 'center',
-        gap: 9,
-        padding: '8px 10px',
-        borderRadius: 8,
-        border: active ? 'none' : 'none',
-        cursor: 'pointer',
-        justifyContent: collapsed ? 'center' : 'flex-start',
-        background: active ? 'rgba(255,255,255,0.14)' : 'transparent',
-        color: active ? 'white' : 'rgba(255,255,255,0.62)',
-        fontWeight: active ? 600 : 500,
-        fontSize: 13,
-        fontFamily: 'inherit',
-        boxShadow: active ? 'inset 2.5px 0 0 #86efac' : 'none',
-        textAlign: 'left',
-        transition: 'background 0.13s, color 0.13s',
-      }}
-      onMouseEnter={e => {
-        if (active) return
-        e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
-        e.currentTarget.style.color = 'rgba(255,255,255,0.88)'
-      }}
-      onMouseLeave={e => {
-        if (active) return
-        e.currentTarget.style.background = 'transparent'
-        e.currentTarget.style.color = 'rgba(255,255,255,0.62)'
-      }}
-    >
-      <Icon size={15} strokeWidth={active ? 2.2 : 1.75} style={{ flexShrink: 0 }} />
-      {!collapsed && label}
-    </button>
-  )
-}
-
-function FooterBtn({ icon, label, collapsed, onClick, title, danger, rightAlign }) {
-  const baseColor = danger ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.38)'
-  const hoverBg = danger ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.07)'
-  const hoverColor = danger ? '#fca5a5' : 'rgba(255,255,255,0.72)'
-
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        width: '100%',
-        display: 'flex', alignItems: 'center',
-        gap: 8,
-        padding: '7px 10px',
-        borderRadius: 7,
-        border: 'none',
-        cursor: 'pointer',
-        justifyContent: collapsed ? 'center' : (rightAlign ? 'space-between' : 'flex-start'),
-        background: 'transparent',
-        color: baseColor,
-        fontSize: 12, fontWeight: 500, fontFamily: 'inherit',
-        transition: 'background 0.13s, color 0.13s',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.background = hoverBg
-        e.currentTarget.style.color = hoverColor
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.background = 'transparent'
-        e.currentTarget.style.color = baseColor
-      }}
-    >
-      {!rightAlign && icon}
-      {!collapsed && label}
-      {rightAlign && !collapsed && icon}
-      {collapsed && rightAlign && icon}
-    </button>
   )
 }
