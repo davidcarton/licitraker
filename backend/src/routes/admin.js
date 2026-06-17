@@ -71,13 +71,36 @@ router.get('/negocio', async (req, res) => {
 
     const [{ suma }] = await baseQuery().where('activa', true).sum({ suma: 'precio_mensual' })
 
-    const filaPlan = await baseQuery()
+    const filasPlan = await baseQuery()
       .where('activa', true)
       .groupBy('plan')
-      .count('id as total')
-      .orderBy('total', 'desc')
       .select('plan')
-      .first()
+      .count('id as empresasActivas')
+      .sum({ mrr: 'precio_mensual' })
+      .orderBy('empresasActivas', 'desc')
+
+    const desglosePorPlan = filasPlan.map(fila => ({
+      plan: fila.plan,
+      empresasActivas: Number(fila.empresasActivas),
+      mrr: Number(fila.mrr) || 0,
+    }))
+
+    const ahora = new Date()
+    const crecimientoMensual = []
+    for (let i = 5; i >= 0; i--) {
+      const inicio = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1)
+      const fin = new Date(ahora.getFullYear(), ahora.getMonth() - i + 1, 1)
+      const [{ count: altas }] = await baseQuery()
+        .where('created_at', '>=', inicio)
+        .where('created_at', '<', fin)
+        .count('id as count')
+      const etiqueta = inicio.toLocaleString('es-ES', { month: 'short', year: '2-digit' })
+      crecimientoMensual.push({
+        mes: `${inicio.getFullYear()}-${String(inicio.getMonth() + 1).padStart(2, '0')}`,
+        etiqueta,
+        altas: Number(altas),
+      })
+    }
 
     res.json({
       totalEmpresas: Number(totalEmpresas),
@@ -85,7 +108,8 @@ router.get('/negocio', async (req, res) => {
       totalInactivas: Number(totalInactivas),
       altasEstaSemana: Number(altasEstaSemana),
       mrr: Number(suma) || 0,
-      planMasContratado: filaPlan ? filaPlan.plan : null,
+      desglosePorPlan,
+      crecimientoMensual,
     })
   } catch (err) {
     logger.error('admin', 'Error al obtener visión de negocio: ' + err.message)
