@@ -1,12 +1,60 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Navigate } from 'react-router-dom'
-import {
-  RefreshCw, Building2, CheckCircle2, XCircle, UserPlus, Wallet, Award, AlertCircle,
-} from 'lucide-react'
+import { RefreshCw, Building2, Wallet, AlertCircle } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
-import KPICard from '../components/dashboard/KPICard.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { formatImporte } from '../utils/format.js'
+import { formatImporte, formatFechaLarga } from '../utils/format.js'
+
+function Reloj() {
+  const [hora, setHora] = useState(() => new Date())
+
+  useEffect(() => {
+    const id = setInterval(() => setHora(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--n400)' }}>
+      {hora.toLocaleTimeString('es-ES')}
+    </span>
+  )
+}
+
+function LineaDetalle({ label, valor }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
+      <span style={{ color: 'var(--n500)' }}>{label}</span>
+      <span style={{ fontWeight: 700, color: 'var(--negro)' }}>{valor}</span>
+    </div>
+  )
+}
+
+function TarjetaHeroe({ icon: Icon, valor, label, detalle }) {
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)',
+      boxShadow: 'var(--shadow-card)', padding: '24px 28px',
+      display: 'grid', gridTemplateColumns: 'minmax(140px, 1fr) minmax(160px, 1.2fr)',
+      gap: 24, alignItems: 'center',
+    }}>
+      <div>
+        <div style={{
+          width: 42, height: 42, borderRadius: 'var(--r-md)', background: 'var(--verde-claro)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+        }}>
+          <Icon size={20} color="var(--verde)" />
+        </div>
+        <div style={{ fontFamily: 'var(--font-titulo)', fontSize: 36, fontWeight: 700, color: 'var(--negro)', lineHeight: 1 }}>
+          {valor}
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--n500)', marginTop: 8 }}>{label}</div>
+      </div>
+      <div style={{ borderLeft: '1px solid var(--n100)', paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {detalle}
+      </div>
+    </div>
+  )
+}
 
 export default function VisionNegocio() {
   const { authFetch, usuario } = useAuth()
@@ -46,7 +94,16 @@ export default function VisionNegocio() {
 
   return (
     <DashboardLayout title="Visión general del negocio">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
+        <div>
+          <h2 style={{ fontFamily: 'var(--font-titulo)', fontSize: 24, fontWeight: 700, color: '#000', margin: 0 }}>
+            {usuario?.empresa?.nombre || 'Mi empresa'}
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--n400)', marginTop: 4 }}>{formatFechaLarga()}</p>
+          <div style={{ marginTop: 4 }}>
+            <Reloj />
+          </div>
+        </div>
         <button
           onClick={cargar}
           disabled={cargando}
@@ -78,13 +135,35 @@ export default function VisionNegocio() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
-        <KPICard icon={Building2} value={negocio?.totalEmpresas ?? '—'} label="Empresas registradas" />
-        <KPICard icon={CheckCircle2} value={negocio?.totalActivas ?? '—'} label="Empresas activas" />
-        <KPICard icon={XCircle} value={negocio?.totalInactivas ?? '—'} label="Empresas inactivas" />
-        <KPICard icon={UserPlus} value={negocio?.altasEstaSemana ?? '—'} label="Nuevas altas esta semana" />
-        <KPICard icon={Wallet} value={negocio ? `${formatImporte(negocio.mrr)} €` : '—'} label="Ingresos recurrentes del mes (MRR)" />
-        <KPICard icon={Award} value={negocio?.planMasContratado ?? '—'} label="Plan más contratado" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 20 }}>
+        <TarjetaHeroe
+          icon={Wallet}
+          valor={negocio ? `${formatImporte(negocio.mrr)} €` : '—'}
+          label="Ingresos recurrentes del mes (MRR)"
+          detalle={!negocio ? null : negocio.desglosePorPlan.length === 0 ? (
+            <span style={{ fontSize: 13, color: 'var(--n400)' }}>Sin empresas de pago activas todavía</span>
+          ) : (
+            negocio.desglosePorPlan.map(p => (
+              <LineaDetalle
+                key={p.plan}
+                label={`${p.plan} · ${p.empresasActivas} ${p.empresasActivas === 1 ? 'empresa' : 'empresas'}`}
+                valor={`${formatImporte(p.mrr)} €/mes`}
+              />
+            ))
+          )}
+        />
+        <TarjetaHeroe
+          icon={Building2}
+          valor={negocio?.totalEmpresas ?? '—'}
+          label="Empresas registradas"
+          detalle={!negocio ? null : (
+            <>
+              <LineaDetalle label="Activas" valor={negocio.totalActivas} />
+              <LineaDetalle label="Inactivas" valor={negocio.totalInactivas} />
+              <LineaDetalle label="Altas esta semana" valor={negocio.altasEstaSemana} />
+            </>
+          )}
+        />
       </div>
     </DashboardLayout>
   )
