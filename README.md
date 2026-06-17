@@ -70,7 +70,9 @@ licitraker/
         ├── pages/
         │   ├── Login.jsx
         │   ├── Registro.jsx
+        │   ├── Inicio.jsx          # Decide entre VisionNegocio (superadmin) y Dashboard (resto) en /dashboard
         │   ├── Dashboard.jsx      # KPIs + secciones "guardadas" y "presentadas" siempre visibles + gráfica de resultados
+        │   ├── VisionNegocio.jsx   # Panel superadmin — Inicio: empresas, altas, MRR, plan más contratado
         │   ├── Licitaciones.jsx   # Listado del feed PLACSP con filtros
         │   ├── ResumenIA.jsx      # Resumen generado por IA
         │   ├── Configuracion.jsx  # Perfil / Preferencias (incluye notificaciones) / Integrar CRM
@@ -240,6 +242,7 @@ El frontend (`AppContext.jsx`) separa las guardadas en dos listas según el esta
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/admin/estado` | Métricas del servidor, caché y BD |
+| `GET` | `/api/admin/negocio` | Métricas de negocio: empresas, altas, MRR, plan más contratado (excluye la empresa interna del superadmin) |
 | `GET` | `/api/admin/logs` | Últimas 200 entradas del logger en memoria |
 
 ---
@@ -250,7 +253,7 @@ El frontend (`AppContext.jsx`) separa las guardadas en dos listas según el esta
 |---|---|
 | `user` | Acceso al dashboard y licitaciones de su empresa |
 | `admin` | Igual que user + puede gestionar usuarios de su empresa |
-| `superadmin` | Todo lo anterior + paneles `/dashboard/admin/estado` y `/dashboard/admin/logs` con estado del sistema, Docker, feed PLACSP y logs |
+| `superadmin` | Su "Inicio" (`/dashboard`) muestra la Visión general del negocio en vez del dashboard de empresa. Todo lo anterior + paneles `/dashboard/admin/estado` y `/dashboard/admin/logs` con estado del sistema, Docker, feed PLACSP y logs |
 
 El primer usuario registrado en una empresa (vía `/api/auth/register`) recibe rol `admin` automáticamente. Los `superadmin` se crean manualmente (script `crear-superadmin.js` o UPDATE directo en BD).
 
