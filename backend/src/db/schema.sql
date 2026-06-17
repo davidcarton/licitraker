@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS empresas (
   email_contacto VARCHAR(200),
   telefono VARCHAR(20),
   direccion TEXT,
-  plan VARCHAR(20) DEFAULT 'starter',
+  plan VARCHAR(50) DEFAULT 'starter',
   precio_mensual NUMERIC(10,2),
   activa BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW(),
