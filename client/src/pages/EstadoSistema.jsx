@@ -144,13 +144,13 @@ export default function EstadoSistema() {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <KPICard icon={Clock} value={estado ? formatUptime(estado.servidor.uptimeSegundos) : '—'} label="Tiempo activo del servidor" />
-        <KPICard icon={Cpu} value={estado ? formatMB(estado.servidor.memoria.rss) : '—'} label="Memoria del proceso (RSS)" />
+        <KPICard icon={Clock} value={formatUptime(estado?.servidor?.uptimeSegundos)} label="Tiempo activo del servidor" />
+        <KPICard icon={Cpu} value={formatMB(estado?.servidor?.memoria?.rss)} label="Memoria del proceso (RSS)" />
         <KPICard icon={Gauge} value={api && api.latenciaMediaMs != null ? `${api.latenciaMediaMs} ms` : '—'} label="Tiempo medio de respuesta API" />
-        <KPICard icon={Database} value={estado ? estado.cache.totalLicitaciones : '—'} label="Licitaciones en caché" />
-        <KPICard icon={Building2} value={estado ? estado.base_datos.empresas : '—'} label="Empresas registradas" />
-        <KPICard icon={Users} value={estado ? estado.base_datos.usuarios : '—'} label="Usuarios registrados" />
-        <KPICard icon={FileText} value={estado ? estado.base_datos.licitacionesGuardadas : '—'} label="Licitaciones guardadas (total)" />
+        <KPICard icon={Database} value={estado?.cache?.totalLicitaciones ?? '—'} label="Licitaciones en caché" />
+        <KPICard icon={Building2} value={estado?.base_datos?.empresas ?? '—'} label="Empresas registradas" />
+        <KPICard icon={Users} value={estado?.base_datos?.usuarios ?? '—'} label="Usuarios registrados" />
+        <KPICard icon={FileText} value={estado?.base_datos?.licitacionesGuardadas ?? '—'} label="Licitaciones guardadas (total)" />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
