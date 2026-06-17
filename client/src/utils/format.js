@@ -48,3 +48,10 @@ export function iniciales(nombre) {
   if (palabras.length === 1) return palabras[0].slice(0, 2).toUpperCase()
   return (palabras[0][0] + palabras[1][0]).toUpperCase()
 }
+
+export function formatFechaLarga() {
+  const f = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(new Date())
+  return f.charAt(0).toUpperCase() + f.slice(1)
+}

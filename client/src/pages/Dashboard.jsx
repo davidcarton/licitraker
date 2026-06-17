@@ -6,14 +6,7 @@ import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import KPICard from '../components/dashboard/KPICard.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { diasRestantes, formatImporte } from '../utils/format.js'
-
-function fechaLarga() {
-  const f = new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  }).format(new Date())
-  return f.charAt(0).toUpperCase() + f.slice(1)
-}
+import { diasRestantes, formatImporte, formatFechaLarga } from '../utils/format.js'
 
 // ─── Botón de acción pequeño ──────────────────────────────────────────────────
 
@@ -273,7 +266,7 @@ export default function Dashboard() {
         <h2 style={{ fontFamily: 'var(--font-titulo)', fontSize: 24, fontWeight: 700, color: '#000', margin: 0 }}>
           {nombreEmpresa}
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--n400)', marginTop: 4 }}>{fechaLarga()}</p>
+        <p style={{ fontSize: 13, color: 'var(--n400)', marginTop: 4 }}>{formatFechaLarga()}</p>
       </motion.div>
 
       {/* KPIs */}
