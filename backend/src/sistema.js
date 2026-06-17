@@ -35,9 +35,11 @@ function obtenerDisco() {
     const salida = execSync('df -h /').toString()
     const lineas = salida.trim().split('\n')
     const columnas = lineas[1].trim().split(/\s+/)
-    const totalGB = convertirAGB(columnas[1])
-    const usadoGB = convertirAGB(columnas[2])
-    const porcentajeUso = parseInt(columnas[4], 10)
+    if (columnas.length < 6) return null
+    const n = columnas.length
+    const totalGB = convertirAGB(columnas[n - 5])
+    const usadoGB = convertirAGB(columnas[n - 4])
+    const porcentajeUso = parseInt(columnas[n - 2], 10)
     return { totalGB, usadoGB, porcentajeUso: isNaN(porcentajeUso) ? null : porcentajeUso }
   } catch {
     return null
