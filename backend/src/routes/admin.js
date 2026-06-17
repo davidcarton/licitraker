@@ -56,6 +56,43 @@ router.get('/estado', async (req, res) => {
   }
 })
 
+router.get('/negocio', async (req, res) => {
+  try {
+    const baseQuery = () => db('empresas').whereNot('plan', 'admin')
+
+    const [{ count: totalEmpresas }] = await baseQuery().count('id as count')
+    const [{ count: totalActivas }] = await baseQuery().where('activa', true).count('id as count')
+    const [{ count: totalInactivas }] = await baseQuery().where('activa', false).count('id as count')
+
+    const haceSieteDias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const [{ count: altasEstaSemana }] = await baseQuery()
+      .where('created_at', '>=', haceSieteDias)
+      .count('id as count')
+
+    const [{ suma }] = await baseQuery().where('activa', true).sum({ suma: 'precio_mensual' })
+
+    const filaPlan = await baseQuery()
+      .where('activa', true)
+      .groupBy('plan')
+      .count('id as total')
+      .orderBy('total', 'desc')
+      .select('plan')
+      .first()
+
+    res.json({
+      totalEmpresas: Number(totalEmpresas),
+      totalActivas: Number(totalActivas),
+      totalInactivas: Number(totalInactivas),
+      altasEstaSemana: Number(altasEstaSemana),
+      mrr: Number(suma) || 0,
+      planMasContratado: filaPlan ? filaPlan.plan : null,
+    })
+  } catch (err) {
+    logger.error('admin', 'Error al obtener visión de negocio: ' + err.message)
+    res.status(500).json({ error: 'No se ha podido obtener la visión de negocio' })
+  }
+})
+
 router.get('/logs', (req, res) => {
   res.json({ logs: logger.getEntradas() })
 })
