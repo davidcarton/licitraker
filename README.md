@@ -74,7 +74,8 @@ licitraker/
         │   ├── Licitaciones.jsx   # Listado del feed PLACSP con filtros
         │   ├── ResumenIA.jsx      # Resumen generado por IA
         │   ├── Configuracion.jsx  # Perfil / Preferencias (incluye notificaciones) / Integrar CRM
-        │   └── Admin.jsx          # Panel superadmin
+        │   ├── EstadoSistema.jsx  # Panel superadmin — CPU/RAM/disco, Docker, feed PLACSP, latencia API
+        │   └── LogsErrores.jsx    # Panel superadmin — errores, avisos y peticiones HTTP fallidas
         ├── components/
         │   ├── auth/              # AuthLayout, FormInput, RutaProtegida
         │   ├── dashboard/         # DashboardLayout, Sidebar, Header, KPICard, TablaUrgentes (sin usar, ver Notas conocidas)
@@ -249,11 +250,11 @@ El frontend (`AppContext.jsx`) separa las guardadas en dos listas según el esta
 |---|---|
 | `user` | Acceso al dashboard y licitaciones de su empresa |
 | `admin` | Igual que user + puede gestionar usuarios de su empresa |
-| `superadmin` | Todo lo anterior + panel `/dashboard/admin` con estado del sistema y logs |
+| `superadmin` | Todo lo anterior + paneles `/dashboard/admin/estado` y `/dashboard/admin/logs` con estado del sistema, Docker, feed PLACSP y logs |
 
 El primer usuario registrado en una empresa (vía `/api/auth/register`) recibe rol `admin` automáticamente. Los `superadmin` se crean manualmente (script `crear-superadmin.js` o UPDATE directo en BD).
 
-La visibilidad del módulo de administración está protegida en 3 capas: el Sidebar oculta el enlace si `usuario.rol !== 'superadmin'`, la página `Admin.jsx` redirige a `/dashboard` si no es superadmin, y el backend (`middleware/admin.js`) devuelve 403 si `req.user.rol !== 'superadmin'`.
+La visibilidad del módulo de administración está protegida en 3 capas: el Sidebar oculta el enlace si `usuario.rol !== 'superadmin'`, las páginas `EstadoSistema.jsx` y `LogsErrores.jsx` redirigen a `/dashboard` si no es superadmin, y el backend (`middleware/admin.js`) devuelve 403 si `req.user.rol !== 'superadmin'`.
 
 Ver política de roles actual en la tabla de [Cuentas existentes](#cuentas-existentes).
 
