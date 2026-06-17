@@ -308,6 +308,7 @@ async function descargarYProcesar() {
     cache.datos = ordenar(todasObras)
     cache.ultimaActualizacion = ahora.toISOString()
     cache.proximaActualizacion = getProximaActualizacion().toISOString()
+    cache.ultimoTotalDescargado = todasObras.length
     console.log(`[placsp] OK — ${todasObras.length} obras en plazo`)
   } catch (err) {
     logger.error('placsp', 'Error en descarga: ' + err.message)

@@ -1,5 +1,6 @@
 module.exports = {
   datos: null,
   ultimaActualizacion: null,
-  proximaActualizacion: null
+  proximaActualizacion: null,
+  ultimoTotalDescargado: null,
 }
