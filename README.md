@@ -72,7 +72,7 @@ licitraker/
         │   ├── Registro.jsx
         │   ├── Inicio.jsx          # Decide entre VisionNegocio (superadmin) y Dashboard (resto) en /dashboard
         │   ├── Dashboard.jsx      # KPIs + secciones "guardadas" y "presentadas" siempre visibles + gráfica de resultados
-        │   ├── VisionNegocio.jsx   # Panel superadmin — Inicio: empresas, altas, MRR, plan más contratado
+        │   ├── VisionNegocio.jsx   # Panel superadmin — Inicio: empresas, altas, MRR, desglose por plan, crecimiento mensual
         │   ├── Licitaciones.jsx   # Listado del feed PLACSP con filtros
         │   ├── ResumenIA.jsx      # Resumen generado por IA
         │   ├── Configuracion.jsx  # Perfil / Preferencias (incluye notificaciones) / Integrar CRM
@@ -242,7 +242,7 @@ El frontend (`AppContext.jsx`) separa las guardadas en dos listas según el esta
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/admin/estado` | Métricas del servidor, caché y BD |
-| `GET` | `/api/admin/negocio` | Métricas de negocio: empresas, altas, MRR, plan más contratado (excluye la empresa interna del superadmin) |
+| `GET` | `/api/admin/negocio` | Métricas de negocio: empresas, altas, MRR, desglose por plan y crecimiento mensual (excluye la empresa interna del superadmin) |
 | `GET` | `/api/admin/logs` | Últimas 200 entradas del logger en memoria |
 
 ---
