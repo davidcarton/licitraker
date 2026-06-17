@@ -15,6 +15,7 @@ const licitacionesRoutes = require('./src/routes/licitaciones')
 const adminRoutes = require('./src/routes/admin')
 const logger = require('./src/utils/logger')
 const cache = require('./src/cache')
+const { medirLatencia, registrarPeticionesFallidas } = require('./src/middleware/metricas')
 
 const corsOrigins = (process.env.CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
 
@@ -22,6 +23,8 @@ const app = express()
 app.use(cors(corsOrigins.length ? { origin: corsOrigins, credentials: true } : { origin: true, credentials: true }))
 
 app.use(express.json())
+app.use(medirLatencia)
+app.use(registrarPeticionesFallidas(logger))
 app.use('/api/auth', authRoutes)
 app.use('/api/licitaciones-guardadas', licitacionesRoutes)
 app.use('/api/admin', adminRoutes)
