@@ -56,6 +56,67 @@ function TarjetaHeroe({ icon: Icon, valor, label, detalle }) {
   )
 }
 
+function GraficaCrecimiento({ datos }) {
+  const max = Math.max(...datos.map(d => d.altas), 1)
+  return (
+    <div style={{ background: '#fff', border: '1px solid var(--n100)', borderRadius: 'var(--r-xl)', padding: '20px 24px' }}>
+      <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: '0 0 18px 0' }}>
+        Crecimiento de empresas
+      </h3>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', height: 90 }}>
+        {datos.map(d => {
+          const altura = Math.max(Math.round((d.altas / max) * 70), 2)
+          return (
+            <div key={d.mes} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--n500)' }}>{d.altas}</div>
+              <div style={{ width: 22, height: altura, background: 'var(--g500)', borderRadius: '3px 3px 0 0' }} />
+              <div style={{ fontSize: 10, color: 'var(--n300)' }}>{d.etiqueta}</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function GraficaIngresosPorPlan({ datos }) {
+  if (datos.length === 0) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid var(--n100)', borderRadius: 'var(--r-xl)', padding: '20px 24px' }}>
+        <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: '0 0 18px 0' }}>
+          Ingresos por plan
+        </h3>
+        <p style={{ fontSize: 13, color: 'var(--n400)' }}>Sin empresas de pago activas todavía</p>
+      </div>
+    )
+  }
+
+  const max = Math.max(...datos.map(d => d.mrr), 1)
+  return (
+    <div style={{ background: '#fff', border: '1px solid var(--n100)', borderRadius: 'var(--r-xl)', padding: '20px 24px' }}>
+      <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: '0 0 18px 0' }}>
+        Ingresos por plan
+      </h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {datos.map(d => {
+          const ancho = Math.max(Math.round((d.mrr / max) * 100), 4)
+          return (
+            <div key={d.plan}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, color: 'var(--negro)', marginBottom: 6 }}>
+                <span>{d.plan}</span>
+                <span>{formatImporte(d.mrr)} €/mes</span>
+              </div>
+              <div style={{ height: 10, borderRadius: 5, background: 'var(--n100)', overflow: 'hidden' }}>
+                <div style={{ width: `${ancho}%`, height: '100%', background: 'var(--g500)', borderRadius: 5 }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function VisionNegocio() {
   const { authFetch, usuario } = useAuth()
   const [negocio, setNegocio] = useState(null)
@@ -165,6 +226,13 @@ export default function VisionNegocio() {
           )}
         />
       </div>
+
+      {negocio && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginTop: 20 }}>
+          <GraficaCrecimiento datos={negocio.crecimientoMensual} />
+          <GraficaIngresosPorPlan datos={negocio.desglosePorPlan} />
+        </div>
+      )}
     </DashboardLayout>
   )
 }
