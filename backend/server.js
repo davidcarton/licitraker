@@ -13,6 +13,7 @@ const Anthropic = require('@anthropic-ai/sdk')
 const authRoutes = require('./src/routes/auth')
 const licitacionesRoutes = require('./src/routes/licitaciones')
 const adminRoutes = require('./src/routes/admin')
+const clientesRoutes = require('./src/routes/clientes')
 const logger = require('./src/utils/logger')
 const cache = require('./src/cache')
 const { medirLatencia, registrarPeticionesFallidas } = require('./src/middleware/metricas')
@@ -28,6 +29,7 @@ app.use(registrarPeticionesFallidas(logger))
 app.use('/api/auth', authRoutes)
 app.use('/api/licitaciones-guardadas', licitacionesRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/admin/clientes', clientesRoutes)
 
 const ATOM_URL = 'https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom'
 
