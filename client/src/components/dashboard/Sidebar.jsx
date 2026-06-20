@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, Settings, LogOut, Activity, ScrollText } from 'lucide-react'
+import { LayoutDashboard, FileText, Settings, LogOut, Activity, ScrollText, Users } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { iniciales } from '../../utils/format.js'
 
@@ -8,6 +8,8 @@ const NAV_ITEMS = [
   { to: '/dashboard/licitaciones', label: 'Licitaciones', icon: FileText, end: false },
   { to: '/dashboard/configuracion', label: 'Configuración', icon: Settings, end: false },
 ]
+
+const ITEM_CLIENTES_SUPERADMIN = { to: '/dashboard/admin/clientes', label: 'Gestión de clientes', icon: Users, end: false }
 
 const NAV_ITEMS_ADMIN = [
   { to: '/dashboard/admin/estado', label: 'Estado del sistema', icon: Activity, end: false },
@@ -18,7 +20,12 @@ export default function Sidebar() {
   const { usuario, logout } = useAuth()
   const navigate = useNavigate()
   const nombreEmpresa = usuario?.empresa?.nombre || 'Mi empresa'
-  const navItems = usuario?.rol === 'superadmin' ? [...NAV_ITEMS, ...NAV_ITEMS_ADMIN] : NAV_ITEMS
+  const navItems = usuario?.rol === 'superadmin'
+    ? [
+        ...NAV_ITEMS.map(item => item.label === 'Configuración' ? ITEM_CLIENTES_SUPERADMIN : item),
+        ...NAV_ITEMS_ADMIN,
+      ]
+    : NAV_ITEMS
 
   const handleLogout = () => {
     logout()
