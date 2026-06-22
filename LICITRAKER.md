@@ -299,8 +299,8 @@ Si el caché está vacío al arrancar, se descarga de inmediato.
 ## Despliegue en producción (VPS Clouding)
 
 **Servidor**: `root@187.33.144.208`  
-**Ruta de la app**: `/var/www/licitaplus-demo`  
-**Proceso PM2**: `LiciTraker` (id 2)  
+**Ruta de la app**: `/var/www/licitraker`  
+**Proceso PM2**: `LiciTraker` (id 3)  
 **Puerto**: 3002
 
 ### Conexión SSH
@@ -321,7 +321,7 @@ git push
 
 # Servidor — actualizar y reconstruir
 ssh -i ~/.ssh/id_rsa_clouding root@187.33.144.208
-cd /var/www/licitaplus-demo
+cd /var/www/licitraker
 git pull
 cd client && npm run build
 cd ..
