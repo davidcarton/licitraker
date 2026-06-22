@@ -4,6 +4,7 @@ const auth = require('../middleware/auth')
 const requireAdmin = require('../middleware/admin')
 const logger = require('../utils/logger')
 const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
 
 router.use(auth, requireAdmin)
 
@@ -146,6 +147,54 @@ router.patch('/:id/usuarios/:usuarioId/password', async (req, res) => {
   } catch (err) {
     logger.error('clientes', 'Error al resetear contraseña: ' + err.message)
     res.status(500).json({ error: 'No se ha podido actualizar la contraseña' })
+  }
+})
+
+router.post('/:id/email', async (req, res) => {
+  try {
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return res.status(500).json({ error: 'El servicio de email no está configurado en el servidor' })
+    }
+
+    const empresa = await db('empresas').whereNot('plan', 'admin').where('id', req.params.id).first()
+    if (!empresa) {
+      return res.status(404).json({ error: 'Cliente no encontrado' })
+    }
+
+    const { asunto, cuerpo } = req.body || {}
+    if (!asunto || !String(asunto).trim()) {
+      return res.status(400).json({ error: 'El asunto es obligatorio' })
+    }
+    if (!cuerpo || !String(cuerpo).trim()) {
+      return res.status(400).json({ error: 'El mensaje es obligatorio' })
+    }
+
+    const usuarios = await db('usuarios').where('empresa_id', empresa.id).select('email', 'nombre')
+    if (usuarios.length === 0) {
+      return res.status(400).json({ error: 'Esta empresa no tiene usuarios a los que enviar el email' })
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    })
+
+    const destinatarios = usuarios.map(u => u.email).join(', ')
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: destinatarios,
+      subject: String(asunto).trim(),
+      text: String(cuerpo).trim(),
+    })
+
+    logger.info?.('clientes', `Email enviado a ${empresa.nombre} (${destinatarios})`)
+    res.json({ ok: true })
+  } catch (err) {
+    logger.error('clientes', 'Error al enviar email: ' + err.message)
+    res.status(500).json({ error: 'No se ha podido enviar el email' })
   }
 })
 
