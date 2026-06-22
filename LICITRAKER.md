@@ -29,6 +29,7 @@ Demo en producción: **http://187.33.144.208:3002**
 | Feed de datos | PLACSP ATOM XML — parseo con `axios` + `xml2js` |
 | IA | Anthropic SDK — modelo `claude-haiku-4-5-20251001` |
 | Tareas programadas | `node-cron` |
+| Email | `nodemailer` (SMTP) — envío de emails a clientes desde el panel admin |
 | Servidor | VPS Clouding — PM2 como gestor de procesos |
 
 ---
@@ -56,7 +57,7 @@ licitraker/
 │       │   ├── auth.js            # /api/auth — login, register, logout, me
 │       │   ├── licitaciones.js    # /api/licitaciones-guardadas — CRUD por empresa
 │       │   ├── admin.js           # /api/admin — estado y logs (solo superadmin)
-│       │   └── clientes.js        # /api/admin/clientes — listado, detalle, edición y reseteo de contraseña
+│       │   └── clientes.js        # /api/admin/clientes — listado, detalle, edición, reseteo de contraseña y envío de email (nodemailer)
 │       └── utils/
 │           └── logger.js          # Logger en memoria (últimas 200 entradas)
 └── client/
@@ -73,13 +74,13 @@ licitraker/
         │   ├── Registro.jsx
         │   ├── Inicio.jsx          # Decide entre VisionNegocio (superadmin) y Dashboard (resto) en /dashboard
         │   ├── Dashboard.jsx      # KPIs + secciones "guardadas" y "presentadas" siempre visibles + gráfica de resultados
-        │   ├── VisionNegocio.jsx   # Panel superadmin — Inicio: empresas, altas, MRR, desglose por plan, crecimiento mensual
+        │   ├── VisionNegocio.jsx   # Panel superadmin — Inicio: 4 KPIs (MRR, clientes activos, altas semana, licitaciones guardadas), gráfica de crecimiento mensual, estado de cuentas + ingresos por plan, últimas incorporaciones, salud del sistema
         │   ├── Licitaciones.jsx   # Listado del feed PLACSP con filtros
         │   ├── ResumenIA.jsx      # Resumen generado por IA
         │   ├── Configuracion.jsx  # Perfil / Preferencias (incluye notificaciones) / Integrar CRM
         │   ├── EstadoSistema.jsx  # Panel superadmin — CPU/RAM/disco, Docker, feed PLACSP, latencia API
         │   ├── LogsErrores.jsx    # Panel superadmin — errores, avisos y peticiones HTTP fallidas
-        │   └── GestionClientes.jsx # Panel superadmin — lista de clientes + modal de edición/reseteo de contraseña
+        │   └── GestionClientes.jsx # Panel superadmin — lista de clientes; al hacer clic, vista de detalle inline (no modal) con edición de plan/estado, envío de email directo, preferencias y usuarios
         ├── components/
         │   ├── auth/              # AuthLayout, FormInput, RutaProtegida
         │   ├── dashboard/         # DashboardLayout, Sidebar, Header, KPICard, TablaUrgentes (sin usar, ver Notas conocidas)
@@ -116,6 +117,14 @@ CORS_ORIGINS=
 
 # Resumen IA (opcional — sin esto el botón de resumen devuelve error)
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Email (SMTP) — opcional, necesario para enviar emails a clientes desde Gestión de clientes
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
 ```
 
 ---
@@ -250,6 +259,7 @@ El frontend (`AppContext.jsx`) separa las guardadas en dos listas según el esta
 | `GET` | `/api/admin/clientes/:id` | Detalle de un cliente con sus usuarios y preferencias configuradas |
 | `PATCH` | `/api/admin/clientes/:id` | Edita plan, precio_mensual y/o activa de un cliente |
 | `PATCH` | `/api/admin/clientes/:id/usuarios/:usuarioId/password` | Resetea la contraseña de un usuario dentro de un cliente |
+| `POST` | `/api/admin/clientes/:id/email` | Envía un email (asunto + cuerpo) a todos los usuarios del cliente vía SMTP (nodemailer). Requiere `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` configurados, si no devuelve 500 |
 
 ---
 
@@ -337,3 +347,4 @@ pm2 stop LiciTraker         # Parar
 - **`TablaUrgentes.jsx`** (`client/src/components/dashboard/`) quedó sin uso tras el rediseño del Dashboard (las secciones "guardadas"/"presentadas" siempre visibles sustituyeron al panel de "Atención requerida"). No se ha borrado por si se quiere recuperar esa vista; valorar eliminarlo si no se reutiliza.
 - **Fuentes**: `--font-display` (Syne 800) es un display font pesado, poco legible en tamaños pequeños/densos (tarjetas, listas). Usar `--font-titulo` (Inter) o `'DM Sans'` para títulos de tarjeta e importes; reservar Syne para titulares grandes.
 - **Gráfica de resultados del Dashboard** (`GraficaResultados` en `Dashboard.jsx`) se construye con divs CSS (sin librería de gráficos), agrupando por mes a partir de `fechaResolucion` (= `updated_at` de la fila). Solo se muestra el desglose mensual si hay datos de más de un mes.
+- **Envío de email a clientes sin servicio SMTP configurado**: si `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` no están en el `.env`, el endpoint `POST /api/admin/clientes/:id/email` devuelve 500 pero el resto del panel de Gestión de clientes funciona con normalidad (igual patrón que `ANTHROPIC_API_KEY` para el resumen IA).
