@@ -90,9 +90,42 @@ confirmar cómo se comporta esta plataforma en la práctica. Hallazgos:
    "30 MB de PDFs en bruto" puede traducirse en ~40 MB en la petición real
    y disparar un error 400 por tamaño — hay que dejar margen.
 
+10. **Prueba a fondo sobre 34 licitaciones reales tipo obra y en plazo**
+    (replicando exactamente el filtro `esObra()`/`estaEnPlazo()` de
+    `server.js`, para no mezclar servicios/suministros que el usuario
+    nunca vería con el botón): 33 de 34 (97%) tienen pliego vigente con
+    PDFs reales descargables; la única sin pliego es un caso normal (solo
+    "Anuncio de Licitación" en la ficha, pliegos aún no publicados). 0
+    expedientes vacíos o duplicados en la muestra. De 87 PDFs descargados,
+    **9 (10%) superaban las 100 páginas** (máximo encontrado: 375
+    páginas) — el límite de 100 páginas de Claude Haiku **no es un caso
+    raro, es frecuente** en pliegos de obra reales (memorias, mediciones,
+    proyectos completos). Además, al combinar varios documentos hasta el
+    tope de tamaño, **cortar un PDF a mitad de descarga lo deja con
+    estructura inválida** (confirmado: 9 de los 87 PDFs quedaban
+    corruptos tras el corte) — enviar ese PDF truncado a Claude lo haría
+    rechazarlo como archivo inválido, y el reintento "quitar el PDF más
+    grande" no siempre lo soluciona porque el documento truncado no
+    siempre es el más grande del lote.
+
+11. **El límite de 100 páginas por PDF depende del *context window* del
+    modelo, no es un tope fijo de la API**: la documentación oficial dice
+    "32 MB por petición, 600 páginas por PDF (100 páginas solo en modelos
+    de contexto 200K)". `claude-haiku-4-5` tiene 200K de contexto → de ahí
+    el límite de 100 páginas que se está viendo. `claude-sonnet-4-6` tiene
+    1M de contexto → el límite sube a **600 páginas por PDF**. Con ese
+    cambio de modelo, ninguno de los 87 PDFs reales de la muestra (máximo
+    375 páginas) se habría rechazado por límite de páginas. El límite de
+    32 MB por petición (~24 MB en bruto considerando la inflación de
+    base64) no cambia con el modelo — el tope de diseño de 20 MB ya
+    descrito sigue siendo válido y seguro.
+
 Esto implica que el scraper necesita **dos saltos** (ficha → envoltorio
 "Pliego" vigente → documentos reales filtrados por `Content-Type`, sin
-filtrar por patrón de URL), no uno solo como se asumió inicialmente.
+filtrar por patrón de URL), no uno solo como se asumió inicialmente. Y que
+el modelo de Claude usado en este endpoint debe cambiar de
+`claude-haiku-4-5` a `claude-sonnet-4-6` para evitar que el límite de
+páginas sea un problema frecuente en la práctica.
 
 ## Alcance
 
@@ -131,14 +164,34 @@ filtrar por patrón de URL), no uno solo como se asumió inicialmente.
      agotar un tope de **20MB combinados en bruto** (deja margen frente al
      límite real de la API de 32MB por petición una vez los PDFs se
      codifican en base64 — ver hallazgo 9). Sin límite de cantidad de
-     documentos.
-  3. Llamar a Claude con los metadatos + los PDFs descargados como bloques
-     `document` (si se encontró al menos uno), o solo metadatos si la
-     ficha no se pudo descargar / no se encontró ningún PDF (fallback al
-     comportamiento actual). Si Claude rechaza la petición por tamaño o
-     páginas de algún documento, se reintenta una vez quitando el PDF más
-     grande; si vuelve a fallar, fallback a metadatos.
-  4. Guardar el resumen resultante en `resumenes_ia` (keyed por
+     documentos. **Si un documento no entra completo en el cupo restante,
+     se descarta entero (no se trunca a mitad)** — un PDF cortado queda
+     con estructura inválida y Claude lo rechazaría como archivo corrupto
+     (ver hallazgo 10).
+  3. Llamar a **`claude-sonnet-4-6`** (cambio respecto al modelo actual
+     `claude-haiku-4-5` — ver hallazgo 11: el límite de páginas por PDF
+     depende del context window del modelo, 100 páginas en modelos de
+     200K como Haiku, 600 páginas en modelos de 1M como Sonnet 4.6; con
+     375 páginas como máximo real encontrado, Sonnet 4.6 cubre todos los
+     casos de la muestra de validación) con los metadatos + los PDFs
+     descargados como bloques `document` (si se encontró al menos uno), o
+     solo metadatos si la ficha no se pudo descargar / no se encontró
+     ningún PDF (fallback al comportamiento actual). Si Claude rechaza la
+     petición por tamaño o páginas de algún documento, se reintenta una
+     vez quitando el PDF más grande; si vuelve a fallar, se activa el
+     resumen por bloques (ver más abajo) y, si ese también falla,
+     fallback a metadatos.
+  4. **Resumen por bloques (map-reduce) como último recurso** — solo se
+     activa si, tras los pasos anteriores, sigue habiendo un documento
+     que Claude rechaza por páginas (caso extremo, no encontrado en la
+     muestra real de validación pero posible): se divide ese PDF en
+     bloques de páginas dentro del límite del modelo, se pide a Claude un
+     resumen de cada bloque por separado, y se hace una llamada final a
+     Claude pidiéndole que sintetice esos resúmenes parciales en el
+     resumen único de la licitación. Garantiza que nunca se pierda
+     información aunque el documento sea muy grande, a costa de varias
+     llamadas a Claude en vez de una.
+  5. Guardar el resumen resultante en `resumenes_ia` (keyed por
      `expediente`) y devolverlo.
 - Nueva migración knex `resumenes_ia` (expediente único, resumen,
   pliegos_encontrados, timestamps), siguiendo el patrón de
@@ -237,12 +290,15 @@ filtrar por patrón de URL), no uno solo como se asumió inicialmente.
        reuso de socket keep-alive entre peticiones distintas — causó
        timeouts intermitentes durante las pruebas) y filtro por
        `Content-Type: application/pdf`.
-    Devuelve un array de `{ filename, base64 }` para los PDFs encontrados,
-    en el orden en que aparecen en el envoltorio, parando al alcanzar
-    **20MB combinados en bruto** (sin límite de cantidad de documentos).
-    Si cualquier paso falla (ficha no descargable, fila no encontrada,
-    sin PDFs), devuelve un array vacío — nunca lanza un error que rompa el
-    resumen (fallback a metadatos).
+    Devuelve un array de `{ filename, base64, bytes }` para los PDFs
+    encontrados, en el orden en que aparecen en el envoltorio, **parando
+    al alcanzar 20MB combinados en bruto sin incluir el documento que
+    haría superar el tope** (se descarta entero ese documento, nunca se
+    trunca a mitad — un PDF cortado queda con estructura inválida, ver
+    hallazgo 10). Sin límite de cantidad de documentos. Si cualquier paso
+    falla (ficha no descargable, fila no encontrada, sin PDFs), devuelve
+    un array vacío — nunca lanza un error que rompa el resumen (fallback
+    a metadatos).
 
 - `backend/server.js` — endpoint `POST /api/resumen-ia`
   - Antes de construir el prompt: `SELECT resumen FROM resumenes_ia WHERE
@@ -252,10 +308,18 @@ filtrar por patrón de URL), no uno solo como se asumió inicialmente.
     uno como bloque `{ type: 'document', source: { type: 'base64',
     media_type: 'application/pdf', data } }` en el `content` del mensaje
     a Claude junto al texto del prompt.
+  - **Modelo: `claude-sonnet-4-6`** (cambio respecto a `claude-haiku-4-5`,
+    que es el modelo actual de este endpoint) — su context window de 1M
+    eleva el límite de páginas por PDF de 100 a 600 (ver hallazgo 11),
+    cubriendo los casos reales encontrados en la validación (máximo 375
+    páginas).
   - Si la llamada a Claude falla por tamaño/páginas de un documento
     (`invalid_request_error`), se reintenta una vez quitando de la lista
     el PDF con más bytes y volviendo a llamar a Claude. Si vuelve a
-    fallar, se cae al prompt basado solo en metadatos (sin pliegos).
+    fallar por páginas de un documento concreto, se activa el resumen por
+    bloques (map-reduce, ver sección "Alcance") solo para ese documento;
+    si también falla, se cae al prompt basado solo en metadatos (sin
+    pliegos).
   - Tras la respuesta de Claude, `INSERT INTO resumenes_ia (expediente,
     resumen, pliegos_encontrados)` y devolver `{ resumen }`.
   - El body del request necesita ahora también `expediente` (ya lo manda
@@ -273,13 +337,16 @@ filtrar por patrón de URL), no uno solo como se asumió inicialmente.
   devuelve el mismo mensaje de error genérico (`'No se ha podido generar
   el resumen con IA'`), sin guardar nada en `resumenes_ia`.
 - Si Claude rechaza la petición por tamaño/páginas → se reintenta una vez
-  sin el PDF más grande (ver "Componentes y cambios"); si el reintento
-  también falla, se genera el resumen solo con metadatos en vez de
-  devolver un error al usuario.
-- Si un documento supera el límite de tamaño combinado (20MB en bruto) a
-  mitad de descarga, se corta ahí y se usan los pliegos ya descargados (no
-  se reintenta ni se informa al usuario del corte — es un límite técnico
-  interno, no un error).
+  sin el PDF más grande (ver "Componentes y cambios"); si vuelve a fallar
+  por páginas de un documento concreto, se activa el resumen por bloques
+  (map-reduce) solo para ese documento; si también falla, se genera el
+  resumen solo con metadatos en vez de devolver un error al usuario.
+- Si un documento no entra completo en el tope de tamaño combinado (20MB
+  en bruto), se descarta entero y se sigue con el resto de documentos que
+  sí entran — nunca se trunca un PDF a mitad de descarga (un PDF cortado
+  queda con estructura inválida, ver hallazgo 10). No se informa al
+  usuario de los documentos descartados por tamaño — es un límite técnico
+  interno, no un error.
 
 ## Testing
 
@@ -299,9 +366,14 @@ filtrar por patrón de URL), no uno solo como se asumió inicialmente.
   organismos de Castilla-La Mancha) → comprobar que los PDFs se detectan
   igual, sin depender del patrón de URL.
 - Test manual: una licitación con un PDF de planos/memoria muy grande
-  (>100 páginas o cerca del límite de tamaño) → comprobar que, si Claude
-  lo rechaza, el resumen se genera igual tras el reintento sin ese
-  documento, en vez de fallar.
+  (cerca del límite de tamaño o de páginas) → comprobar que, si Claude lo
+  rechaza, el resumen se genera igual tras el reintento sin ese documento,
+  en vez de fallar.
+- Test manual (caso extremo, no encontrado en la muestra real pero a
+  cubrir): un PDF que supere las 600 páginas incluso con `claude-sonnet-4-6`
+  → comprobar que se activa el resumen por bloques (map-reduce) y el
+  resumen final menciona contenido de todo el documento, no solo del
+  primer bloque.
 - Comprobar que pedir el resumen dos veces de la misma licitación la
   segunda vez es instantáneo (servido desde `resumenes_ia`, sin llamar a
   Claude ni a PLACSP).
