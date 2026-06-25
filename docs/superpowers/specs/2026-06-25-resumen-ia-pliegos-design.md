@@ -28,6 +28,14 @@ renderizado JS) y contiene una tabla de documentos con una columna
 
 ## Alcance
 
+> **Importante — alcance por licitación individual:** el flujo de "Resumen
+> IA" es siempre 1 a 1. Aunque LiciTraker pueda tener cientos de
+> licitaciones cargadas a la vez, pulsar el botón de una tarjeta concreta
+> solo descarga y analiza los pliegos **de esa licitación** (su `enlace` y
+> su `expediente`), nunca los de otras. El caché en `resumenes_ia` también
+> es por `expediente`, así que el resumen de una licitación nunca se
+> reutiliza ni se mezcla con el de otra.
+
 **Incluye:**
 - Mover los botones "Resumen IA" y "Guardar" de `Licitaciones.jsx` a
   dentro de `LicitacionCard.jsx`, debajo del botón "Ver licitación
