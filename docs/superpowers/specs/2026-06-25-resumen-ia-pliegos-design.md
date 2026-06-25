@@ -57,9 +57,42 @@ confirmar cómo se comporta esta plataforma en la práctica. Hallazgos:
    (html/xml/pdf) — ese es el criterio fiable para elegir cuál usar, no el
    texto exacto del tipo ni el orden en la tabla.
 
+6. **Hay (al menos) dos endpoints distintos que sirven documentos en
+   PLACSP** — `GetDocumentByIdServlet` (documentos nativos de PLACSP) y
+   `/wps/wcm/connect/.../docAccCmpnt?...cmpntname=GetDocumentsById...`
+   (usado cuando los pliegos vienen de una plataforma autonómica federada,
+   confirmado con un caso real de Castilla-La Mancha). Filtrar los enlaces
+   candidatos del envoltorio por patrón de URL es un error — se probaron
+   los 23 casos con fila "Pliego" vigente de la muestra de validación y 3
+   de ellos (13%) usaban este segundo patrón; un filtro por URL los
+   habría descartado por completo, tratándolos como "sin pliego" cuando
+   sí lo tenían. La solución es **probar todos los `<a href>` del
+   envoltorio sin filtrar por URL**, y decidir solo por el `Content-Type`
+   real de la respuesta.
+
+7. **Hay licitaciones sin ninguna fila "Pliego" en absoluto** (confirmado
+   en una muestra de 25 licitaciones reales: 2 de 25, 8%) — anuncios
+   previos publicados antes de que exista pliego, o adjudicaciones
+   antiguas donde la fila ya no aparece en la ficha. El fallback a
+   metadatos (ya contemplado) es necesario en la práctica, no solo
+   teórico.
+
+8. **Tamaños reales observados**: hasta 22 MB un solo PDF (memoria/planos
+   técnicos), 23,56 MB combinados en una licitación de la muestra. Un caso
+   multi-lote real tenía 10 PDFs válidos (anexos técnicos + proyectos por
+   lote) — un límite de "máx. N documentos" puede dejar fuera anexos
+   técnicos relevantes en licitaciones complejas.
+
+9. **Límite real de la API de Claude para documentos PDF: 32 MB por
+   petición y 100 páginas por PDF** (en modelos de contexto de 200K, como
+   `claude-haiku-4-5`, el que ya usa este endpoint). Como el contenido se
+   envía en base64 (~33% más pesado que el PDF en bruto), un límite de
+   "30 MB de PDFs en bruto" puede traducirse en ~40 MB en la petición real
+   y disparar un error 400 por tamaño — hay que dejar margen.
+
 Esto implica que el scraper necesita **dos saltos** (ficha → envoltorio
-"Pliego" vigente → documentos reales filtrados por `Content-Type`), no
-uno solo como se asumió inicialmente.
+"Pliego" vigente → documentos reales filtrados por `Content-Type`, sin
+filtrar por patrón de URL), no uno solo como se asumió inicialmente.
 
 ## Alcance
 
@@ -84,21 +117,27 @@ uno solo como se asumió inicialmente.
      rota (`#`). Si hay varias rectificaciones vigentes a la vez (caso
      raro), se usan todas.
   2. Descarga la versión `.html` del envoltorio "Documento de Pliegos" de
-     esa fila y extrae todos sus enlaces internos a
-     `GetDocumentByIdServlet` (los pliegos reales y anexos).
+     esa fila y extrae **todos** sus enlaces internos `<a href>` — sin
+     filtrar por patrón de URL (hay al menos 2 endpoints distintos que
+     sirven documentos reales en PLACSP, ver hallazgo 6).
   3. Para cada enlace, hace un GET y se queda solo con los que respondan
      `Content-Type: application/pdf` (descarta duplicados html/xml y
      cualquier `.zip` u otro formato — ver "Fuera de alcance").
 - El endpoint `POST /api/resumen-ia` pasa a:
   1. Buscar primero en la tabla `resumenes_ia` por `expediente`. Si existe,
      devolver el resumen cacheado sin descargar nada ni llamar a Claude.
-  2. Si no existe, intentar descargar los pliegos (máx. **6 documentos /
-     30MB** combinados; si se supera el límite, se toman los primeros 6 o
-     hasta agotar los 30MB, lo que ocurra antes).
+  2. Si no existe, intentar descargar los pliegos: se procesan todos los
+     PDFs encontrados en el envoltorio, en el orden en que aparecen, hasta
+     agotar un tope de **20MB combinados en bruto** (deja margen frente al
+     límite real de la API de 32MB por petición una vez los PDFs se
+     codifican en base64 — ver hallazgo 9). Sin límite de cantidad de
+     documentos.
   3. Llamar a Claude con los metadatos + los PDFs descargados como bloques
      `document` (si se encontró al menos uno), o solo metadatos si la
-     ficha no se pudo descargar / no se encontró ningún PDF de tipo
-     "Pliego" (fallback al comportamiento actual).
+     ficha no se pudo descargar / no se encontró ningún PDF (fallback al
+     comportamiento actual). Si Claude rechaza la petición por tamaño o
+     páginas de algún documento, se reintenta una vez quitando el PDF más
+     grande; si vuelve a fallar, fallback a metadatos.
   4. Guardar el resumen resultante en `resumenes_ia` (keyed por
      `expediente`) y devolverlo.
 - Nueva migración knex `resumenes_ia` (expediente único, resumen,
@@ -188,19 +227,22 @@ uno solo como se asumió inicialmente.
        fila vigente de tipo `/pliego/i` (con sus 3 enlaces de envoltorio
        funcionando, no `#`).
     2. GET a la versión `.html` de esa fila (el envoltorio "Documento de
-       Pliegos") y extracción de todos sus `<a href>` hacia
-       `GetDocumentByIdServlet` (resolviendo URLs relativas contra
-       `https://contrataciondelestado.es/`, que es donde se ha encontrado
-       el bug más relevante al probar: algunos hrefs vienen sin dominio).
+       Pliegos") y extracción de **todos** sus `<a href>` (resolviendo
+       URLs relativas contra `https://contrataciondelestado.es/`, que es
+       donde se ha encontrado el bug más relevante al probar: algunos
+       hrefs vienen sin dominio) — sin filtrar por patrón de servlet, ya
+       que se han confirmado al menos 2 endpoints distintos que sirven
+       documentos reales (`GetDocumentByIdServlet` y `docAccCmpnt`).
     3. Para cada enlace, GET con cabecera `Connection: close` (evitar
        reuso de socket keep-alive entre peticiones distintas — causó
        timeouts intermitentes durante las pruebas) y filtro por
        `Content-Type: application/pdf`.
     Devuelve un array de `{ filename, base64 }` para los PDFs encontrados,
-    respetando el límite de 6 documentos / 30MB combinados. Si cualquier
-    paso falla (ficha no descargable, fila no encontrada, sin PDFs),
-    devuelve un array vacío — nunca lanza un error que rompa el resumen
-    (fallback a metadatos).
+    en el orden en que aparecen en el envoltorio, parando al alcanzar
+    **20MB combinados en bruto** (sin límite de cantidad de documentos).
+    Si cualquier paso falla (ficha no descargable, fila no encontrada,
+    sin PDFs), devuelve un array vacío — nunca lanza un error que rompa el
+    resumen (fallback a metadatos).
 
 - `backend/server.js` — endpoint `POST /api/resumen-ia`
   - Antes de construir el prompt: `SELECT resumen FROM resumenes_ia WHERE
@@ -210,6 +252,10 @@ uno solo como se asumió inicialmente.
     uno como bloque `{ type: 'document', source: { type: 'base64',
     media_type: 'application/pdf', data } }` en el `content` del mensaje
     a Claude junto al texto del prompt.
+  - Si la llamada a Claude falla por tamaño/páginas de un documento
+    (`invalid_request_error`), se reintenta una vez quitando de la lista
+    el PDF con más bytes y volviendo a llamar a Claude. Si vuelve a
+    fallar, se cae al prompt basado solo en metadatos (sin pliegos).
   - Tras la respuesta de Claude, `INSERT INTO resumenes_ia (expediente,
     resumen, pliegos_encontrados)` y devolver `{ resumen }`.
   - El body del request necesita ahora también `expediente` (ya lo manda
@@ -223,12 +269,16 @@ uno solo como se asumió inicialmente.
   estructura del HTML) → se loguea con `logger.warn('pliegos', ...)` y se
   continúa con el resumen basado solo en metadatos, igual que el
   comportamiento actual. El usuario nunca ve un error por esto.
-- Si Claude falla (como hoy) → se devuelve el mismo mensaje de error
-  genérico (`'No se ha podido generar el resumen con IA'`), sin guardar
-  nada en `resumenes_ia`.
-- Si un documento supera el límite de tamaño combinado a mitad de
-  descarga, se corta ahí y se usan los pliegos ya descargados (no se
-  reintenta ni se informa al usuario del corte — es un límite técnico
+- Si Claude falla por un motivo distinto a tamaño/páginas (como hoy) → se
+  devuelve el mismo mensaje de error genérico (`'No se ha podido generar
+  el resumen con IA'`), sin guardar nada en `resumenes_ia`.
+- Si Claude rechaza la petición por tamaño/páginas → se reintenta una vez
+  sin el PDF más grande (ver "Componentes y cambios"); si el reintento
+  también falla, se genera el resumen solo con metadatos en vez de
+  devolver un error al usuario.
+- Si un documento supera el límite de tamaño combinado (20MB en bruto) a
+  mitad de descarga, se corta ahí y se usan los pliegos ya descargados (no
+  se reintenta ni se informa al usuario del corte — es un límite técnico
   interno, no un error).
 
 ## Testing
@@ -244,6 +294,14 @@ uno solo como se asumió inicialmente.
   "Pliego"/"Rectificación de Pliego" en la ficha) → comprobar que se usan
   los documentos de la versión vigente, no los de una versión superseded
   con enlace roto.
+- Test manual: una licitación cuyo envoltorio de pliegos use el endpoint
+  `docAccCmpnt` en vez de `GetDocumentByIdServlet` (caso confirmado con
+  organismos de Castilla-La Mancha) → comprobar que los PDFs se detectan
+  igual, sin depender del patrón de URL.
+- Test manual: una licitación con un PDF de planos/memoria muy grande
+  (>100 páginas o cerca del límite de tamaño) → comprobar que, si Claude
+  lo rechaza, el resumen se genera igual tras el reintento sin ese
+  documento, en vez de fallar.
 - Comprobar que pedir el resumen dos veces de la misma licitación la
   segunda vez es instantáneo (servido desde `resumenes_ia`, sin llamar a
   Claude ni a PLACSP).
