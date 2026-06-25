@@ -55,6 +55,7 @@ export default function ResumenIA() {
         fechaLimite: licitacion.fechaLimite,
         cpv: licitacion.cpv,
         enlace: licitacion.enlace,
+        expediente: licitacion.expediente,
       }),
     })
       .then(res => res.json())
