@@ -9,6 +9,10 @@ const os = require('os')
 const path = require('path')
 const cron = require('node-cron')
 const Anthropic = require('@anthropic-ai/sdk')
+const { PDFDocument } = require('pdf-lib')
+
+const { obtenerPliegosPDF } = require('./src/utils/pliegos')
+const db = require('./src/db')
 
 const authRoutes = require('./src/routes/auth')
 const licitacionesRoutes = require('./src/routes/licitaciones')
@@ -408,17 +412,15 @@ app.get('/api/buscar-cpv', async (req, res) => {
   }
 })
 
-app.post('/api/resumen-ia', async (req, res) => {
-  try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({ error: 'El servicio de resumen con IA no está configurado' })
-    }
+const MODELO_RESUMEN = 'claude-sonnet-4-6'
+const PAGINAS_POR_BLOQUE = 80
 
-    const { titulo, organismo, importe, fechaLimite, cpv, enlace } = req.body || {}
+function construirPromptResumen({ titulo, organismo, importe, fechaLimite, cpv, enlace, hayPliegos }) {
+  const sinDatos = ' — indica explícitamente que no se han podido leer los pliegos y que esta información no está disponible'
 
-    const prompt = `Eres un asistente que ayuda a pequeñas constructoras a entender licitaciones públicas de forma rápida y sin tecnicismos.
+  return `Eres un asistente que ayuda a pequeñas constructoras a entender licitaciones públicas de forma rápida y sin tecnicismos.
 
-Te paso los datos de una licitación pública española. Genera un resumen breve y claro, en español, dirigido a una constructora que está valorando si presentarse o no.
+Te paso los datos de una licitación pública española${hayPliegos ? ', junto con los documentos reales del pliego (pliego de prescripciones técnicas y/o cláusulas administrativas)' : ''}. Genera un resumen claro, en español, dirigido a una constructora que está valorando si presentarse o no.
 
 Datos de la licitación:
 - Título: ${titulo || 'No disponible'}
@@ -431,23 +433,161 @@ Datos de la licitación:
 Estructura el resumen exactamente con estos apartados, usando un lenguaje sencillo y directo (evita jerga jurídica o administrativa):
 
 1. Tipo de obra y descripción
-2. Requisitos principales
-3. Documentación necesaria
-4. Plazo de ejecución (si aparece)
+2. Características técnicas clave (medidas, volúmenes, materiales, plazos de ejecución)${hayPliegos ? '' : sinDatos}
+3. Documentación a presentar${hayPliegos ? '' : sinDatos}
+4. Requisitos principales (solvencia, clasificación...)
 5. Observaciones relevantes
 
 Termina siempre con una línea que empiece por "Recomendación:" indicando si merece la pena estudiarla.
 
-Si no tienes información suficiente para algún apartado, indícalo brevemente sin inventar datos.`
+${hayPliegos
+    ? 'Usa las características técnicas y la documentación a presentar tal y como aparecen en los pliegos adjuntos — no inventes datos que no estén en los documentos.'
+    : 'No se han podido leer los pliegos de esta licitación: basa el resumen solo en los metadatos anteriores y deja explícito en los apartados 2 y 3 que esa información no está disponible, sin inventar características técnicas.'}`
+}
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+function bloqueDocumento(pdf) {
+  return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdf.base64 } }
+}
+
+async function llamarClaude(anthropic, prompt, pdfs) {
+  const content = pdfs.length
+    ? [...pdfs.map(bloqueDocumento), { type: 'text', text: prompt }]
+    : prompt
+
+  const message = await anthropic.messages.create({
+    model: MODELO_RESUMEN,
+    max_tokens: 1536,
+    messages: [{ role: 'user', content }],
+  })
+  return message.content[0].text
+}
+
+function ordenarPorTamanoDesc(pdfs) {
+  return [...pdfs].sort((a, b) => b.bytes - a.bytes)
+}
+
+async function dividirPDFEnBloques(base64, paginasPorBloque = PAGINAS_POR_BLOQUE) {
+  const buffer = Buffer.from(base64, 'base64')
+  const original = await PDFDocument.load(buffer)
+  const totalPaginas = original.getPageCount()
+  const bloques = []
+
+  for (let inicio = 0; inicio < totalPaginas; inicio += paginasPorBloque) {
+    const fin = Math.min(inicio + paginasPorBloque, totalPaginas)
+    const nuevo = await PDFDocument.create()
+    const indices = []
+    for (let p = inicio; p < fin; p++) indices.push(p)
+    const paginasCopiadas = await nuevo.copyPages(original, indices)
+    paginasCopiadas.forEach(p => nuevo.addPage(p))
+    const bytes = await nuevo.save()
+    bloques.push(Buffer.from(bytes).toString('base64'))
+  }
+
+  return bloques
+}
+
+async function resumenPorBloques(anthropic, promptOriginal, pdf) {
+  const bloques = await dividirPDFEnBloques(pdf.base64)
+  const resumenesParciales = []
+
+  for (let i = 0; i < bloques.length; i++) {
+    const promptBloque = `Este es el bloque ${i + 1} de ${bloques.length} de un documento de pliego de una licitación pública. Resume en español, de forma breve, las características técnicas (medidas, volúmenes, materiales) y la documentación a presentar que aparezcan en este bloque concreto. No repitas información genérica, céntrate solo en lo que aparece en estas páginas.`
+
     const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: MODELO_RESUMEN,
       max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: bloques[i] } },
+          { type: 'text', text: promptBloque },
+        ],
+      }],
     })
+    resumenesParciales.push(message.content[0].text)
+  }
 
-    res.json({ resumen: message.content[0].text })
+  const promptFinal = `${promptOriginal}
+
+El pliego de esta licitación es muy extenso y se ha resumido por bloques. Aquí tienes los resúmenes de cada bloque, en orden:
+
+${resumenesParciales.map((r, i) => `--- Bloque ${i + 1} ---\n${r}`).join('\n\n')}
+
+Sintetiza toda esta información en el resumen final de la licitación, siguiendo la estructura de apartados pedida, sin perder ninguna característica técnica ni documento a presentar que se mencione en los bloques.`
+
+  const final = await anthropic.messages.create({
+    model: MODELO_RESUMEN,
+    max_tokens: 1536,
+    messages: [{ role: 'user', content: promptFinal }],
+  })
+  return final.content[0].text
+}
+
+async function generarResumenConDocumentos(anthropic, prompt, pdfs) {
+  if (pdfs.length === 0) {
+    return llamarClaude(anthropic, prompt, [])
+  }
+
+  try {
+    return await llamarClaude(anthropic, prompt, pdfs)
+  } catch (err) {
+    if (err.status !== 400) {
+      return llamarClaude(anthropic, prompt, [])
+    }
+
+    const ordenados = ordenarPorTamanoDesc(pdfs)
+    const masGrande = ordenados[0]
+    const sinElMasGrande = ordenados.slice(1)
+
+    if (sinElMasGrande.length > 0) {
+      try {
+        return await llamarClaude(anthropic, prompt, sinElMasGrande)
+      } catch (err2) {
+        if (err2.status !== 400) return llamarClaude(anthropic, prompt, [])
+      }
+    }
+
+    try {
+      return await resumenPorBloques(anthropic, prompt, masGrande)
+    } catch {
+      return llamarClaude(anthropic, prompt, [])
+    }
+  }
+}
+
+app.post('/api/resumen-ia', async (req, res) => {
+  try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'El servicio de resumen con IA no está configurado' })
+    }
+
+    const { titulo, organismo, importe, fechaLimite, cpv, enlace, expediente } = req.body || {}
+
+    if (expediente) {
+      const cacheado = await db('resumenes_ia').where({ expediente }).first()
+      if (cacheado) {
+        return res.json({ resumen: cacheado.resumen })
+      }
+    }
+
+    let pdfs = []
+    try {
+      pdfs = await obtenerPliegosPDF(enlace)
+    } catch (e) {
+      logger.warn('pliegos', `Error al descargar pliegos: ${e.message}`)
+    }
+
+    const prompt = construirPromptResumen({ titulo, organismo, importe, fechaLimite, cpv, enlace, hayPliegos: pdfs.length > 0 })
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const resumen = await generarResumenConDocumentos(anthropic, prompt, pdfs)
+
+    if (expediente) {
+      await db('resumenes_ia')
+        .insert({ expediente, resumen, pliegos_encontrados: pdfs.length })
+        .onConflict('expediente').merge()
+    }
+
+    res.json({ resumen })
   } catch (err) {
     logger.error('api', 'Error en resumen-ia: ' + err.message)
     res.status(500).json({ error: 'No se ha podido generar el resumen con IA' })

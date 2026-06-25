@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { SearchX, WifiOff, AlertTriangle, Sparkles, Bookmark, BookmarkCheck, Hash, Search } from 'lucide-react'
+import { SearchX, WifiOff, AlertTriangle, Hash, Search } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import FiltroBarra from '../components/ui/FiltroBarra.jsx'
 import LicitacionCard from '../components/cards/LicitacionCard.jsx'
@@ -89,45 +89,15 @@ function TarjetaLicitacion({ licitacion: l, index: i, guardada, onSeleccionar, o
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min(i * 0.035, 0.5) }}
-      style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 380 }}
+      style={{ width: '100%', maxWidth: 380 }}
     >
-      <LicitacionCard licitacion={l} onClick={() => onSeleccionar(l)} />
-
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          onClick={(e) => { e.stopPropagation(); navigate('/dashboard/resumen', { state: { licitacion: l } }) }}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '8px 12px',
-            borderRadius: 'var(--r-md)',
-            background: '#EAF4EE',
-            color: '#2A5938',
-            border: '1px solid #3D7A4F',
-            fontSize: 12, fontWeight: 700,
-            fontFamily: 'var(--font-body)',
-          }}
-        >
-          <Sparkles size={13} />
-          Resumen IA
-        </button>
-
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleGuardar(l) }}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '8px 12px',
-            borderRadius: 'var(--r-md)',
-            background: guardada ? 'var(--verde-claro)' : 'var(--n100)',
-            color: guardada ? 'var(--verde)' : 'var(--n500)',
-            border: guardada ? '1px solid var(--g200)' : '1px solid transparent',
-            fontSize: 12, fontWeight: 700,
-            fontFamily: 'var(--font-body)',
-          }}
-        >
-          {guardada ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-          {guardada ? 'Guardada' : 'Guardar'}
-        </button>
-      </div>
+      <LicitacionCard
+        licitacion={l}
+        onClick={() => onSeleccionar(l)}
+        onResumenIA={(lic) => navigate('/dashboard/resumen', { state: { licitacion: lic } })}
+        onToggleGuardar={onToggleGuardar}
+        guardada={guardada}
+      />
     </motion.div>
   )
 }

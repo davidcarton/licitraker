@@ -7,6 +7,9 @@ import {
   FileText,
   ExternalLink,
   Clock,
+  Sparkles,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 import Badge from "../ui/Badge.jsx";
 import {
@@ -69,7 +72,7 @@ function MetaCell({ icon, label, value, mono, gris }) {
 
 // --- Tarjeta ──────────────────────────────────────────────────────────────────
 
-export default function LicitacionCard({ licitacion: l, onClick }) {
+export default function LicitacionCard({ licitacion: l, onClick, onResumenIA, onToggleGuardar, guardada }) {
   const [hovered, setHovered] = useState(false);
   const tipo = tipoBadge(l.fechaLimite);
   const dias = diasRestantes(l.fechaLimite);
@@ -315,6 +318,61 @@ export default function LicitacionCard({ licitacion: l, onClick }) {
             </button>
           )}
         </div>
+
+        {/* Fila de Resumen IA / Guardar */}
+        {(onResumenIA || onToggleGuardar) && (
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            {onResumenIA && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onResumenIA(l); }}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  padding: "8px 12px",
+                  borderRadius: "var(--r-md)",
+                  background: "#EAF4EE",
+                  color: "#2A5938",
+                  border: "1px solid #3D7A4F",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  fontFamily: "var(--font-body)",
+                  cursor: "pointer",
+                }}
+              >
+                <Sparkles size={13} />
+                Resumen IA
+              </button>
+            )}
+
+            {onToggleGuardar && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleGuardar(l); }}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  padding: "8px 12px",
+                  borderRadius: "var(--r-md)",
+                  background: guardada ? "var(--verde-claro)" : "var(--n100)",
+                  color: guardada ? "var(--verde)" : "var(--n500)",
+                  border: guardada ? "1px solid var(--g200)" : "1px solid transparent",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  fontFamily: "var(--font-body)",
+                  cursor: "pointer",
+                }}
+              >
+                {guardada ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+                {guardada ? "Guardada" : "Guardar"}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Fecha publicación */}
         <div
