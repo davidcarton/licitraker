@@ -18,13 +18,48 @@ que construir (medidas, volúmenes, materiales...) y la documentación que
 hay que presentar — información que solo está en los pliegos reales, no en
 los metadatos del feed.
 
-Se ha confirmado mediante prueba real contra PLACSP que la ficha de detalle
-de la licitación (`l.enlace`, con formato
-`https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=...`)
-es HTML estático servido por una simple petición GET (sin necesitar
-renderizado JS) y contiene una tabla de documentos con una columna
-`tipoDocumento` y enlaces de descarga directa a
-`https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?...`.
+### Validación real contra PLACSP (previa a este diseño)
+
+Antes de diseñar el scraper se ha probado contra 10 licitaciones reales de
+PLACSP (organismos distintos: Mercamadrid, ayuntamientos, etc.) para
+confirmar cómo se comporta esta plataforma en la práctica. Hallazgos:
+
+1. La ficha de detalle (`l.enlace`, formato
+   `https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=...`)
+   es HTML estático servido por GET simple (sin JS), con una tabla de
+   documentos con columna `tipoDocumento` (valores observados: "Anuncio de
+   Licitación", "Pliego", "Rectificación de Pliego", "Adjudicación",
+   "Formalización", "Modificación de Contrato"...) y enlaces a
+   `https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?...`.
+
+2. **La fila "Pliego" de esa tabla NO es el pliego real.** Es un documento
+   envoltorio autogenerado por PLACSP ("Documento de Pliegos") que repite
+   los metadatos del contrato (importe, plazos, CPV...), disponible en 3
+   formatos paralelos con el mismo contenido (`.html`, `.xml`, `.pdf`).
+
+3. **Los pliegos reales están anidados dentro de la versión HTML de ese
+   envoltorio**, como enlaces de verdad subidos por el organismo: "Pliego
+   Prescripciones Técnicas", "Pliego Cláusulas Administrativas", y a veces
+   anexos sueltos ("ANEXO I...pdf", incluso un `.zip`). Confirmado
+   descargando uno real: 1,19 MB, PDF auténtico con contenido real (no el
+   resumen de metadatos).
+
+4. Filtrar por la cabecera `Content-Type: application/pdf` de la respuesta
+   (no por la extensión del nombre) separa correctamente los PDFs reales
+   de los duplicados `.html`/`.xml` y de los `.zip` — confirmado con casos
+   reales.
+
+5. **Las rectificaciones complican la selección de fila**: cuando un
+   pliego se rectifica, pueden aparecer varias filas tipo "Pliego" /
+   "Rectificación de Pliego", pero las versiones superseded quedan con su
+   enlace principal roto (`#`, sin documentos reales detrás). La fila
+   vigente es la que tiene de verdad sus 3 enlaces funcionando
+   (html/xml/pdf) — ese es el criterio fiable para elegir cuál usar, no el
+   texto exacto del tipo ni el orden en la tabla.
+
+Esto implica que el scraper necesita **dos saltos** (ficha → envoltorio
+"Pliego" vigente → documentos reales filtrados por `Content-Type`), no
+uno solo como se asumió inicialmente.
 
 ## Alcance
 
@@ -41,11 +76,19 @@ renderizado JS) y contiene una tabla de documentos con una columna
   dentro de `LicitacionCard.jsx`, debajo del botón "Ver licitación
   oficial" (ancho completo arriba, los otros dos en una fila debajo —
   igual disposición que hoy, solo que dentro de la tarjeta).
-- Nuevo módulo de backend que, dado el `enlace` de una licitación,
-  descarga la ficha PLACSP, localiza las filas de la tabla de documentos
-  cuyo `tipoDocumento` contiene "Pliego", y descarga los documentos cuyo
-  `Content-Type` de respuesta sea `application/pdf` (se descartan otros
-  formatos — ver "Fuera de alcance").
+- Nuevo módulo de backend que, dado el `enlace` de una licitación:
+  1. Descarga la ficha PLACSP y localiza, entre las filas de la tabla de
+     documentos cuyo `tipoDocumento` coincide con `/pliego/i` (cubre
+     "Pliego" y "Rectificación de Pliego"), la fila **vigente**: la que
+     tiene sus 3 enlaces de envoltorio (html/xml/pdf) funcionando, no
+     rota (`#`). Si hay varias rectificaciones vigentes a la vez (caso
+     raro), se usan todas.
+  2. Descarga la versión `.html` del envoltorio "Documento de Pliegos" de
+     esa fila y extrae todos sus enlaces internos a
+     `GetDocumentByIdServlet` (los pliegos reales y anexos).
+  3. Para cada enlace, hace un GET y se queda solo con los que respondan
+     `Content-Type: application/pdf` (descarta duplicados html/xml y
+     cualquier `.zip` u otro formato — ver "Fuera de alcance").
 - El endpoint `POST /api/resumen-ia` pasa a:
   1. Buscar primero en la tabla `resumenes_ia` por `expediente`. Si existe,
      devolver el resumen cacheado sin descargar nada ni llamar a Claude.
@@ -75,11 +118,12 @@ renderizado JS) y contiene una tabla de documentos con una columna
   técnicas que no están disponibles).
 
 **Excluye explícitamente:**
-- **Extracción de texto de Word/otros formatos no-PDF** — si un pliego
-  viene en `.doc`/`.docx` o cualquier formato no-PDF, se omite (no se
-  añaden librerías de extracción como `mammoth`). Si en el futuro se
-  detecta que esto deja fuera información relevante con frecuencia, será
-  un sub-proyecto aparte.
+- **Extracción de texto de Word/ZIP/otros formatos no-PDF** — si un
+  documento del envoltorio viene en `.doc`/`.docx`/`.zip` o cualquier
+  formato no-PDF (confirmado: los anexos a veces vienen empaquetados en
+  un `.zip`), se omite (no se añaden librerías de extracción ni
+  descompresión). Si en el futuro se detecta que esto deja fuera
+  información relevante con frecuencia, será un sub-proyecto aparte.
 - **Plataformas distintas de PLACSP** — los enlaces de licitaciones de
   LiciTraker son siempre de `contrataciondelestado.es` (confirmado), así
   que no se generaliza el scraper para otras plataformas de contratación
@@ -136,16 +180,27 @@ renderizado JS) y contiene una tabla de documentos con una columna
   ```
 
 - `backend/src/utils/pliegos.js` (nuevo módulo)
-  - `obtenerPliegosPDF(enlace)`: descarga la ficha de detalle (GET con el
-    mismo `User-Agent`/timeout que ya usa `descargarYParsear` en
-    `server.js`), parsea la tabla de documentos (con `cheerio`, nueva
-    dependencia ligera) buscando filas cuyo `tipoDocumento` contenga
-    "Pliego", y para cada enlace encontrado hace un GET y comprueba la
-    cabecera `Content-Type`. Devuelve un array de `{ filename, base64 }`
-    para los que sean `application/pdf`, respetando el límite de 6
-    documentos / 30MB combinados. Si la ficha no se puede descargar o no
-    hay PDFs, devuelve un array vacío (nunca lanza error que rompa el
-    resumen — fallback a metadatos).
+  - `obtenerPliegosPDF(enlace)`: implementa el flujo de 2 saltos validado
+    (ver "Validación real contra PLACSP"):
+    1. GET a la ficha de detalle (mismo `User-Agent`/timeout que ya usa
+       `descargarYParsear` en `server.js`) y parseo con `cheerio` (nueva
+       dependencia ligera) de la tabla de documentos, para localizar la
+       fila vigente de tipo `/pliego/i` (con sus 3 enlaces de envoltorio
+       funcionando, no `#`).
+    2. GET a la versión `.html` de esa fila (el envoltorio "Documento de
+       Pliegos") y extracción de todos sus `<a href>` hacia
+       `GetDocumentByIdServlet` (resolviendo URLs relativas contra
+       `https://contrataciondelestado.es/`, que es donde se ha encontrado
+       el bug más relevante al probar: algunos hrefs vienen sin dominio).
+    3. Para cada enlace, GET con cabecera `Connection: close` (evitar
+       reuso de socket keep-alive entre peticiones distintas — causó
+       timeouts intermitentes durante las pruebas) y filtro por
+       `Content-Type: application/pdf`.
+    Devuelve un array de `{ filename, base64 }` para los PDFs encontrados,
+    respetando el límite de 6 documentos / 30MB combinados. Si cualquier
+    paso falla (ficha no descargable, fila no encontrada, sin PDFs),
+    devuelve un array vacío — nunca lanza un error que rompa el resumen
+    (fallback a metadatos).
 
 - `backend/server.js` — endpoint `POST /api/resumen-ia`
   - Antes de construir el prompt: `SELECT resumen FROM resumenes_ia WHERE
@@ -185,6 +240,10 @@ renderizado JS) y contiene una tabla de documentos con una columna
 - Test manual: una licitación cuyo `enlace` ya no esté accesible (caducada
   o cambiada) → comprobar que el resumen se genera igual con el fallback
   de metadatos, sin romper la petición.
+- Test manual: una licitación con un pliego rectificado (varias filas
+  "Pliego"/"Rectificación de Pliego" en la ficha) → comprobar que se usan
+  los documentos de la versión vigente, no los de una versión superseded
+  con enlace roto.
 - Comprobar que pedir el resumen dos veces de la misma licitación la
   segunda vez es instantáneo (servido desde `resumenes_ia`, sin llamar a
   Claude ni a PLACSP).
