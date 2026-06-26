@@ -1,9 +1,9 @@
-import { Search, Bell, Plus } from 'lucide-react'
+import { Search, Bell, Plus, Menu } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { iniciales } from '../../utils/format.js'
 
-export default function Header({ title }) {
+export default function Header({ title, onToggleSidebar }) {
   const { usuario } = useAuth()
   const navigate = useNavigate()
   const nombreEmpresa = usuario?.empresa?.nombre || 'Mi empresa'
@@ -25,6 +25,28 @@ export default function Header({ title }) {
         zIndex: 40,
       }}
     >
+      {/* Botón hamburguesa — solo móvil */}
+      <button
+        className="dash-header-hamburger"
+        aria-label="Abrir menú"
+        onClick={onToggleSidebar}
+        style={{
+          display: 'none',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background: 'rgba(255,255,255,0.08)',
+          flexShrink: 0,
+          transition: 'background var(--transition)',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.16)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+      >
+        <Menu size={18} color="#fff" />
+      </button>
+
       <h1
         style={{
           fontFamily: 'var(--font-titulo)',
@@ -146,6 +168,9 @@ export default function Header({ title }) {
         }
         @media (max-width: 680px) {
           .dash-header-buscador { display: none !important; }
+        }
+        @media (max-width: 640px) {
+          .dash-header-hamburger { display: flex !important; }
         }
       `}</style>
     </header>

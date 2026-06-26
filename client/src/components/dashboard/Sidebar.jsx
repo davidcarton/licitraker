@@ -16,7 +16,7 @@ const NAV_ITEMS_ADMIN = [
   { to: '/dashboard/admin/logs', label: 'Logs y errores', icon: ScrollText, end: false },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ abierto, onCerrar }) {
   const { usuario, logout } = useAuth()
   const navigate = useNavigate()
   const nombreEmpresa = usuario?.empresa?.nombre || 'Mi empresa'
@@ -34,7 +34,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="dash-sidebar"
+      className={`dash-sidebar${abierto ? ' dash-sidebar--open' : ''}`}
       style={{
         width: 200,
         flexShrink: 0,
@@ -47,6 +47,7 @@ export default function Sidebar() {
         left: 0,
         bottom: 0,
         zIndex: 60,
+        transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
       }}
     >
       {/* Logo */}
@@ -183,10 +184,14 @@ export default function Sidebar() {
       </div>
 
       <style>{`
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .dash-sidebar { width: 64px !important; }
           .dash-sidebar-label { display: none !important; }
-          .dash-content { margin-left: 64px !important; }
+        }
+        @media (max-width: 640px) {
+          .dash-sidebar { transform: translateX(-200px); width: 200px !important; }
+          .dash-sidebar--open { transform: translateX(0) !important; }
+          .dash-sidebar--open .dash-sidebar-label { display: inline !important; }
         }
       `}</style>
     </aside>

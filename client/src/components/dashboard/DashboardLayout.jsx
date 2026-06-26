@@ -1,13 +1,29 @@
+import { useState } from 'react'
 import Sidebar from './Sidebar.jsx'
 import Header from './Header.jsx'
 
 export default function DashboardLayout({ title, filtros, children }) {
+  const [sidebarAbierto, setSidebarAbierto] = useState(false)
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--gris-fondo)' }}>
-      <Sidebar />
+      <Sidebar abierto={sidebarAbierto} onCerrar={() => setSidebarAbierto(false)} />
 
-      <div className="dash-content" style={{ marginLeft: 200, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <Header title={title} />
+      {/* Overlay oscuro para móvil */}
+      {sidebarAbierto && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setSidebarAbierto(false)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            zIndex: 55,
+          }}
+        />
+      )}
+
+      <div className="dash-content" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <Header title={title} onToggleSidebar={() => setSidebarAbierto(v => !v)} />
 
         {filtros}
 
@@ -15,6 +31,20 @@ export default function DashboardLayout({ title, filtros, children }) {
           {children}
         </main>
       </div>
+
+      <style>{`
+        .dash-content { margin-left: 200px; }
+        @media (max-width: 1024px) {
+          .dash-content { margin-left: 64px; }
+        }
+        @media (max-width: 640px) {
+          .dash-content { margin-left: 0 !important; }
+          .sidebar-overlay { display: block; }
+        }
+        @media (min-width: 641px) {
+          .sidebar-overlay { display: none !important; }
+        }
+      `}</style>
     </div>
   )
 }
