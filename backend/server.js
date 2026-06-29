@@ -460,7 +460,11 @@ async function llamarClaude(anthropic, prompt, pdfs) {
     max_tokens: 1536,
     messages: [{ role: 'user', content }],
   })
-  return message.content[0].text
+  return {
+    text: message.content[0].text,
+    input: message.usage?.input_tokens ?? 0,
+    output: message.usage?.output_tokens ?? 0,
+  }
 }
 
 function ordenarPorTamanoDesc(pdfs) {
@@ -490,6 +494,8 @@ async function dividirPDFEnBloques(base64, paginasPorBloque = PAGINAS_POR_BLOQUE
 async function resumenPorBloques(anthropic, promptOriginal, pdf) {
   const bloques = await dividirPDFEnBloques(pdf.base64)
   const resumenesParciales = []
+  let inputAcum = 0
+  let outputAcum = 0
 
   for (let i = 0; i < bloques.length; i++) {
     const promptBloque = `Este es el bloque ${i + 1} de ${bloques.length} de un documento de pliego de una licitación pública. Resume en español, de forma breve, las características técnicas (medidas, volúmenes, materiales) y la documentación a presentar que aparezcan en este bloque concreto. No repitas información genérica, céntrate solo en lo que aparece en estas páginas.`
@@ -506,6 +512,8 @@ async function resumenPorBloques(anthropic, promptOriginal, pdf) {
       }],
     })
     resumenesParciales.push(message.content[0].text)
+    inputAcum += message.usage?.input_tokens ?? 0
+    outputAcum += message.usage?.output_tokens ?? 0
   }
 
   const promptFinal = `${promptOriginal}
@@ -521,7 +529,11 @@ Sintetiza toda esta información en el resumen final de la licitación, siguiend
     max_tokens: 1536,
     messages: [{ role: 'user', content: promptFinal }],
   })
-  return final.content[0].text
+  return {
+    text: final.content[0].text,
+    input: inputAcum + (final.usage?.input_tokens ?? 0),
+    output: outputAcum + (final.usage?.output_tokens ?? 0),
+  }
 }
 
 async function generarResumenConDocumentos(anthropic, prompt, pdfs) {
@@ -587,11 +599,16 @@ app.post('/api/resumen-ia', async (req, res) => {
 
     const prompt = construirPromptResumen({ titulo, organismo, importe, fechaLimite, cpv, enlace, hayPliegos: pdfs.length > 0 })
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    const resumen = await generarResumenConDocumentos(anthropic, prompt, pdfs)
+    const resultado = await generarResumenConDocumentos(anthropic, prompt, pdfs)
+    const resumen = resultado.text
 
     if (expediente) {
       await db('resumenes_ia')
-        .insert({ expediente, resumen, pliegos_encontrados: pdfs.length, titulo, organismo, importe, fecha_limite: fechaLimite })
+        .insert({
+          expediente, resumen, pliegos_encontrados: pdfs.length,
+          titulo, organismo, importe, fecha_limite: fechaLimite,
+          tokens_input: resultado.input, tokens_output: resultado.output,
+        })
         .onConflict('expediente').merge()
     }
 

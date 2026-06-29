@@ -1,19 +1,18 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, Settings, LogOut, Activity, ScrollText, Users, Sparkles } from 'lucide-react'
+import { LayoutDashboard, FileText, Settings, LogOut, ScrollText, Users, Sparkles } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { iniciales } from '../../utils/format.js'
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Inicio', icon: LayoutDashboard, end: true },
   { to: '/dashboard/licitaciones', label: 'Licitaciones', icon: FileText, end: false },
-  { to: '/dashboard/resumenes', label: 'Mis Resúmenes IA', icon: Sparkles, end: false },
+  { to: '/dashboard/resumenes', label: 'Resúmenes IA', icon: Sparkles, end: false },
   { to: '/dashboard/configuracion', label: 'Configuración', icon: Settings, end: false },
 ]
 
 const ITEM_CLIENTES_SUPERADMIN = { to: '/dashboard/admin/clientes', label: 'Gestión de clientes', icon: Users, end: false }
 
 const NAV_ITEMS_ADMIN = [
-  { to: '/dashboard/admin/estado', label: 'Estado del sistema', icon: Activity, end: false },
   { to: '/dashboard/admin/logs', label: 'Logs y errores', icon: ScrollText, end: false },
 ]
 

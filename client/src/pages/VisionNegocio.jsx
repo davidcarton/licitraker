@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { RefreshCw, Building2, Wallet, AlertCircle, TrendingUp, Database } from 'lucide-react'
+import { RefreshCw, Building2, Wallet, AlertCircle, TrendingUp, Sparkles } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import KPICard from '../components/dashboard/KPICard.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -318,9 +318,9 @@ export default function VisionNegocio() {
           label="Altas esta semana"
         />
         <KPICard
-          icon={Database}
-          value={estado?.base_datos?.licitacionesGuardadas ?? '—'}
-          label="Licitaciones guardadas"
+          icon={Sparkles}
+          value={negocio ? (negocio.tokensIA >= 1000 ? `${(negocio.tokensIA / 1000).toFixed(1)}k` : String(negocio.tokensIA)) : '—'}
+          label="Tokens IA consumidos"
         />
       </div>
 

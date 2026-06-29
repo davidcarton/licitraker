@@ -81,10 +81,10 @@ export default function MisResumenes() {
   }
 
   return (
-    <DashboardLayout title="Mis Resúmenes IA">
+    <DashboardLayout title="Resúmenes IA">
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontFamily: 'var(--font-titulo)', fontSize: 20, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
-          Mis Resúmenes IA
+          Resúmenes IA
         </h1>
         <p style={{ fontSize: 13, color: 'var(--n400)', marginTop: 4 }}>
           Historial de licitaciones analizadas con IA
