@@ -583,7 +583,7 @@ app.post('/api/resumen-ia', async (req, res) => {
 
     if (expediente) {
       await db('resumenes_ia')
-        .insert({ expediente, resumen, pliegos_encontrados: pdfs.length })
+        .insert({ expediente, resumen, pliegos_encontrados: pdfs.length, titulo, organismo, importe, fecha_limite: fechaLimite })
         .onConflict('expediente').merge()
     }
 
@@ -591,6 +591,40 @@ app.post('/api/resumen-ia', async (req, res) => {
   } catch (err) {
     logger.error('api', 'Error en resumen-ia: ' + err.message)
     res.status(500).json({ error: 'No se ha podido generar el resumen con IA' })
+  }
+})
+
+app.get('/api/resumenes-ia', async (req, res) => {
+  try {
+    const resumenes = await db('resumenes_ia')
+      .select('id', 'expediente', 'titulo', 'organismo', 'importe', 'fecha_limite', 'pliegos_encontrados', 'created_at')
+      .orderBy('created_at', 'desc')
+    res.json({ resumenes })
+  } catch (err) {
+    logger.error('api', 'Error al listar resumenes-ia: ' + err.message)
+    res.status(500).json({ error: 'No se han podido cargar los resúmenes' })
+  }
+})
+
+app.get('/api/resumenes-ia/:expediente', async (req, res) => {
+  try {
+    const item = await db('resumenes_ia').where({ expediente: req.params.expediente }).first()
+    if (!item) return res.status(404).json({ error: 'Resumen no encontrado' })
+    res.json(item)
+  } catch (err) {
+    logger.error('api', 'Error al obtener resumen-ia: ' + err.message)
+    res.status(500).json({ error: 'No se ha podido cargar el resumen' })
+  }
+})
+
+app.delete('/api/resumenes-ia/:expediente', async (req, res) => {
+  try {
+    const borrados = await db('resumenes_ia').where({ expediente: req.params.expediente }).delete()
+    if (borrados === 0) return res.status(404).json({ error: 'Resumen no encontrado' })
+    res.json({ ok: true })
+  } catch (err) {
+    logger.error('api', 'Error al eliminar resumen-ia: ' + err.message)
+    res.status(500).json({ error: 'No se ha podido eliminar el resumen' })
   }
 })
 

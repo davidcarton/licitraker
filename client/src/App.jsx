@@ -7,6 +7,7 @@ import Registro from './pages/Registro.jsx'
 import Inicio from './pages/Inicio.jsx'
 import Licitaciones from './pages/Licitaciones.jsx'
 import ResumenIA from './pages/ResumenIA.jsx'
+import MisResumenes from './pages/MisResumenes.jsx'
 import Configuracion from './pages/Configuracion.jsx'
 import EstadoSistema from './pages/EstadoSistema.jsx'
 import LogsErrores from './pages/LogsErrores.jsx'
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/dashboard" element={<RutaProtegida><Inicio /></RutaProtegida>} />
             <Route path="/dashboard/licitaciones" element={<RutaProtegida><Licitaciones /></RutaProtegida>} />
             <Route path="/dashboard/resumen" element={<RutaProtegida><ResumenIA /></RutaProtegida>} />
+            <Route path="/dashboard/resumenes" element={<RutaProtegida><MisResumenes /></RutaProtegida>} />
             <Route path="/dashboard/configuracion" element={<RutaProtegida><Configuracion /></RutaProtegida>} />
             <Route path="/dashboard/admin/clientes" element={<RutaProtegida><GestionClientes /></RutaProtegida>} />
             <Route path="/dashboard/admin/estado" element={<RutaProtegida><EstadoSistema /></RutaProtegida>} />

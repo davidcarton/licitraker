@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, Settings, LogOut, Activity, ScrollText, Users } from 'lucide-react'
+import { LayoutDashboard, FileText, Settings, LogOut, Activity, ScrollText, Users, Sparkles } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { iniciales } from '../../utils/format.js'
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Inicio', icon: LayoutDashboard, end: true },
   { to: '/dashboard/licitaciones', label: 'Licitaciones', icon: FileText, end: false },
+  { to: '/dashboard/resumenes', label: 'Mis Resúmenes IA', icon: Sparkles, end: false },
   { to: '/dashboard/configuracion', label: 'Configuración', icon: Settings, end: false },
 ]
 

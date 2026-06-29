@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Sparkles, Bookmark, BookmarkCheck, Download, AlertTriangle } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { formatFecha, formatImporte, descripcionCPV } from '../utils/format.js'
@@ -31,6 +32,25 @@ function CampoDato({ label, valor, sublinea, destacado, span }) {
     </div>
   )
 }
+
+const printStyles = `
+@media print {
+  body > * { display: none !important; }
+  #resumen-print-area { display: block !important; }
+  #resumen-print-area {
+    position: fixed; inset: 0; background: #fff; z-index: 9999;
+    padding: 48px 64px; font-family: Georgia, serif; color: #111;
+    font-size: 13px; line-height: 1.7;
+  }
+  #resumen-print-area h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #1a3d28; }
+  #resumen-print-area .meta { font-size: 11px; color: #555; margin-bottom: 28px; border-bottom: 1px solid #ddd; padding-bottom: 14px; }
+  #resumen-print-area h2 { font-size: 14px; font-weight: 700; margin: 20px 0 6px; color: #2A5938; text-transform: uppercase; letter-spacing: 0.05em; }
+  #resumen-print-area p { margin-bottom: 10px; }
+  #resumen-print-area ul, #resumen-print-area ol { padding-left: 20px; margin-bottom: 10px; }
+  #resumen-print-area li { margin-bottom: 4px; }
+  #resumen-print-area strong { font-weight: 700; }
+}
+`
 
 export default function ResumenIA() {
   const navigate = useNavigate()
@@ -66,6 +86,16 @@ export default function ResumenIA() {
       .catch(() => setError('No se ha podido generar el resumen con IA. Inténtalo de nuevo en unos minutos.'))
   }, [licitacion])
 
+  const descargarPDF = () => {
+    const area = document.getElementById('resumen-print-area')
+    if (area) {
+      area.querySelector('.meta').textContent =
+        `${licitacion.organismo || ''}  ·  ${formatFecha(licitacion.fechaLimite) || 'Sin plazo'}  ·  Exp. ${licitacion.expediente || '—'}`
+      area.querySelector('h1').textContent = licitacion.titulo || 'Sin título'
+    }
+    window.print()
+  }
+
   if (!licitacion) {
     return (
       <DashboardLayout title="Resumen IA">
@@ -99,6 +129,17 @@ export default function ResumenIA() {
 
   return (
     <DashboardLayout title="Resumen IA">
+      <style>{printStyles}</style>
+
+      {/* Área oculta que se imprime como PDF */}
+      <div id="resumen-print-area" style={{ display: 'none' }}>
+        <h1>{licitacion.titulo || 'Sin título'}</h1>
+        <div className="meta">
+          {licitacion.organismo || ''}  ·  {formatFecha(licitacion.fechaLimite) || 'Sin plazo'}  ·  Exp. {licitacion.expediente || '—'}
+        </div>
+        <ReactMarkdown>{resumen || ''}</ReactMarkdown>
+      </div>
+
       <button
         onClick={() => navigate(-1)}
         style={{
@@ -169,8 +210,8 @@ export default function ResumenIA() {
         )}
 
         {resumen && !cargando && (
-          <div style={{ fontSize: 14, color: 'var(--n700)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-            {resumen}
+          <div className="resumen-md">
+            <ReactMarkdown>{resumen}</ReactMarkdown>
           </div>
         )}
       </section>
@@ -191,20 +232,37 @@ export default function ResumenIA() {
           {guardada ? 'Licitación guardada' : 'Guardar licitación'}
         </button>
 
-        <button
-          onClick={() => window.print()}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '11px 22px', borderRadius: 'var(--r-md)',
-            background: '#fff', color: 'var(--n500)',
-            border: '1px solid var(--n100)',
-            fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)',
-          }}
-        >
-          <Download size={16} />
-          Descargar PDF
-        </button>
+        {resumen && (
+          <button
+            onClick={descargarPDF}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '11px 22px', borderRadius: 'var(--r-md)',
+              background: '#fff', color: 'var(--n500)',
+              border: '1px solid var(--n100)',
+              fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)',
+            }}
+          >
+            <Download size={16} />
+            Descargar PDF
+          </button>
+        )}
       </div>
+
+      <style>{`
+        .resumen-md { font-size: 14px; color: var(--n700); line-height: 1.75; }
+        .resumen-md h2, .resumen-md h3 {
+          font-family: var(--font-titulo); font-weight: 700;
+          color: #1a3d28; margin: 20px 0 6px;
+        }
+        .resumen-md h2 { font-size: 15px; }
+        .resumen-md h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #2A5938; }
+        .resumen-md p { margin-bottom: 10px; }
+        .resumen-md ul, .resumen-md ol { padding-left: 20px; margin-bottom: 10px; }
+        .resumen-md li { margin-bottom: 4px; }
+        .resumen-md strong { font-weight: 700; color: #1a3d28; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </DashboardLayout>
   )
 }
