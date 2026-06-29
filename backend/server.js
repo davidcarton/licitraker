@@ -413,6 +413,7 @@ app.get('/api/buscar-cpv', async (req, res) => {
 })
 
 const MODELO_RESUMEN = 'claude-sonnet-4-6'
+const MODELO_BLOQUE  = 'claude-haiku-4-5-20251001'
 const PAGINAS_POR_BLOQUE = 80
 
 function construirPromptResumen({ titulo, organismo, importe, fechaLimite, cpv, enlace, hayPliegos }) {
@@ -494,7 +495,7 @@ async function resumenPorBloques(anthropic, promptOriginal, pdf) {
     const promptBloque = `Este es el bloque ${i + 1} de ${bloques.length} de un documento de pliego de una licitación pública. Resume en español, de forma breve, las características técnicas (medidas, volúmenes, materiales) y la documentación a presentar que aparezcan en este bloque concreto. No repitas información genérica, céntrate solo en lo que aparece en estas páginas.`
 
     const message = await anthropic.messages.create({
-      model: MODELO_RESUMEN,
+      model: MODELO_BLOQUE,
       max_tokens: 1024,
       messages: [{
         role: 'user',
