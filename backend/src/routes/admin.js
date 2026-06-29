@@ -86,8 +86,9 @@ router.get('/negocio', async (req, res) => {
     }))
 
     const [tokensRow] = await db('resumenes_ia')
-      .select(db.raw('COALESCE(SUM(tokens_input), 0) + COALESCE(SUM(tokens_output), 0) AS total'))
-    const tokensIA = Number(tokensRow?.total) || 0
+      .select(db.raw('COALESCE(SUM(tokens_input), 0) + COALESCE(SUM(tokens_output), 0) AS total_tokens, COALESCE(SUM(coste_euros), 0) AS total_coste'))
+    const tokensIA = Number(tokensRow?.total_tokens) || 0
+    const costeIA = parseFloat(Number(tokensRow?.total_coste).toFixed(4)) || 0
 
     const ahora = new Date()
     const crecimientoMensual = []
@@ -113,6 +114,7 @@ router.get('/negocio', async (req, res) => {
       altasEstaSemana: Number(altasEstaSemana),
       mrr: Number(suma) || 0,
       tokensIA,
+      costeIA,
       desglosePorPlan,
       crecimientoMensual,
     })

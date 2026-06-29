@@ -319,8 +319,8 @@ export default function VisionNegocio() {
         />
         <KPICard
           icon={Sparkles}
-          value={negocio ? (negocio.tokensIA >= 1000 ? `${(negocio.tokensIA / 1000).toFixed(1)}k` : String(negocio.tokensIA)) : '—'}
-          label="Tokens IA consumidos"
+          value={negocio ? `€${negocio.costeIA >= 1 ? negocio.costeIA.toFixed(2) : negocio.costeIA.toFixed(4)}` : '—'}
+          label="Coste IA (API)"
         />
       </div>
 

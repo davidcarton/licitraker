@@ -416,6 +416,20 @@ const MODELO_RESUMEN = 'claude-sonnet-4-6'
 const MODELO_BLOQUE  = 'claude-haiku-4-5-20251001'
 const PAGINAS_POR_BLOQUE = 80
 
+// Precios Anthropic en USD por millón de tokens (actualizar si cambian)
+const PRECIO = {
+  sonnet: { input: 3.00, output: 15.00 },
+  haiku:  { input: 0.80, output: 4.00  },
+}
+const USD_A_EUR = 0.92
+
+function calcularCosteEuros({ inputSonnet = 0, outputSonnet = 0, inputHaiku = 0, outputHaiku = 0 }) {
+  const usd =
+    (inputSonnet  * PRECIO.sonnet.input  + outputSonnet  * PRECIO.sonnet.output) / 1_000_000 +
+    (inputHaiku   * PRECIO.haiku.input   + outputHaiku   * PRECIO.haiku.output)  / 1_000_000
+  return parseFloat((usd * USD_A_EUR).toFixed(6))
+}
+
 function construirPromptResumen({ titulo, organismo, importe, fechaLimite, cpv, enlace, hayPliegos }) {
   const sinDatos = ' — indica explícitamente que no se han podido leer los pliegos y que esta información no está disponible'
 
@@ -460,10 +474,13 @@ async function llamarClaude(anthropic, prompt, pdfs) {
     max_tokens: 1536,
     messages: [{ role: 'user', content }],
   })
+  const input = message.usage?.input_tokens ?? 0
+  const output = message.usage?.output_tokens ?? 0
   return {
     text: message.content[0].text,
-    input: message.usage?.input_tokens ?? 0,
-    output: message.usage?.output_tokens ?? 0,
+    input,
+    output,
+    costeEuros: calcularCosteEuros({ inputSonnet: input, outputSonnet: output }),
   }
 }
 
@@ -494,8 +511,8 @@ async function dividirPDFEnBloques(base64, paginasPorBloque = PAGINAS_POR_BLOQUE
 async function resumenPorBloques(anthropic, promptOriginal, pdf) {
   const bloques = await dividirPDFEnBloques(pdf.base64)
   const resumenesParciales = []
-  let inputAcum = 0
-  let outputAcum = 0
+  let inputHaiku = 0
+  let outputHaiku = 0
 
   for (let i = 0; i < bloques.length; i++) {
     const promptBloque = `Este es el bloque ${i + 1} de ${bloques.length} de un documento de pliego de una licitación pública. Resume en español, de forma breve, las características técnicas (medidas, volúmenes, materiales) y la documentación a presentar que aparezcan en este bloque concreto. No repitas información genérica, céntrate solo en lo que aparece en estas páginas.`
@@ -512,8 +529,8 @@ async function resumenPorBloques(anthropic, promptOriginal, pdf) {
       }],
     })
     resumenesParciales.push(message.content[0].text)
-    inputAcum += message.usage?.input_tokens ?? 0
-    outputAcum += message.usage?.output_tokens ?? 0
+    inputHaiku += message.usage?.input_tokens ?? 0
+    outputHaiku += message.usage?.output_tokens ?? 0
   }
 
   const promptFinal = `${promptOriginal}
@@ -529,10 +546,13 @@ Sintetiza toda esta información en el resumen final de la licitación, siguiend
     max_tokens: 1536,
     messages: [{ role: 'user', content: promptFinal }],
   })
+  const inputSonnet = final.usage?.input_tokens ?? 0
+  const outputSonnet = final.usage?.output_tokens ?? 0
   return {
     text: final.content[0].text,
-    input: inputAcum + (final.usage?.input_tokens ?? 0),
-    output: outputAcum + (final.usage?.output_tokens ?? 0),
+    input: inputHaiku + inputSonnet,
+    output: outputHaiku + outputSonnet,
+    costeEuros: calcularCosteEuros({ inputSonnet, outputSonnet, inputHaiku, outputHaiku }),
   }
 }
 
@@ -608,6 +628,7 @@ app.post('/api/resumen-ia', async (req, res) => {
           expediente, resumen, pliegos_encontrados: pdfs.length,
           titulo, organismo, importe, fecha_limite: fechaLimite,
           tokens_input: resultado.input, tokens_output: resultado.output,
+          coste_euros: resultado.costeEuros ?? null,
         })
         .onConflict('expediente').merge()
     }
@@ -622,7 +643,7 @@ app.post('/api/resumen-ia', async (req, res) => {
 app.get('/api/resumenes-ia', async (req, res) => {
   try {
     const resumenes = await db('resumenes_ia')
-      .select('id', 'expediente', 'resumen', 'titulo', 'organismo', 'importe', 'fecha_limite', 'pliegos_encontrados', 'created_at')
+      .select('id', 'expediente', 'resumen', 'titulo', 'organismo', 'importe', 'fecha_limite', 'pliegos_encontrados', 'coste_euros', 'created_at')
       .orderBy('created_at', 'desc')
     res.json({ resumenes })
   } catch (err) {

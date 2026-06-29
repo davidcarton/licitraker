@@ -176,6 +176,20 @@ export default function MisResumenes() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    {item.coste_euros != null && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 700,
+                        color: '#3D7A4F',
+                        background: '#EAF4EE',
+                        padding: '2px 7px',
+                        borderRadius: 99,
+                        fontFamily: 'var(--font-body)',
+                      }}>
+                        €{Number(item.coste_euros) >= 0.01
+                          ? Number(item.coste_euros).toFixed(3)
+                          : Number(item.coste_euros).toFixed(5)}
+                      </span>
+                    )}
                     <span style={{ fontSize: 11, color: 'var(--n300)' }}>
                       {new Date(item.created_at).toLocaleDateString('es-ES')}
                     </span>
