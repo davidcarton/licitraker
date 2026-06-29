@@ -3,7 +3,7 @@ const http = require('http')
 const cheerio = require('cheerio')
 
 const BASE_URL = 'https://contrataciondelestado.es/'
-const TOPE_BYTES = 8 * 1024 * 1024
+const TOPE_BYTES = 20 * 1024 * 1024
 const TIMEOUT_MS = 20000
 const REDIRECTS_MAX = 5
 
