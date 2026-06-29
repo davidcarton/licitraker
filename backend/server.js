@@ -567,6 +567,13 @@ app.post('/api/resumen-ia', async (req, res) => {
     if (expediente) {
       const cacheado = await db('resumenes_ia').where({ expediente }).first()
       if (cacheado) {
+        if (!cacheado.titulo && titulo) {
+          await db('resumenes_ia').where({ expediente }).update({
+            titulo, organismo,
+            importe: importe ?? cacheado.importe,
+            fecha_limite: fechaLimite ?? cacheado.fecha_limite,
+          })
+        }
         return res.json({ resumen: cacheado.resumen })
       }
     }
