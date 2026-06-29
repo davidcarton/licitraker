@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Sparkles, Bookmark, BookmarkCheck, Download, AlertTriangle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { formatFecha, formatImporte, descripcionCPV } from '../utils/format.js'
@@ -34,12 +35,15 @@ function CampoDato({ label, valor, sublinea, destacado, span }) {
 }
 
 const printStyles = `
+#resumen-print-area { position: fixed; top: -9999px; left: -9999px; }
 @media print {
-  body > * { display: none !important; }
-  #resumen-print-area { display: block !important; }
+  body * { visibility: hidden !important; }
+  #resumen-print-area, #resumen-print-area * { visibility: visible !important; }
   #resumen-print-area {
-    position: fixed; inset: 0; background: #fff; z-index: 9999;
-    padding: 48px 64px; font-family: Georgia, serif; color: #111;
+    position: fixed !important; top: 0 !important; left: 0 !important;
+    width: 100% !important; height: auto !important;
+    background: #fff !important; padding: 48px 64px;
+    font-family: Georgia, serif; color: #111;
     font-size: 13px; line-height: 1.7;
   }
   #resumen-print-area h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #1a3d28; }
@@ -49,6 +53,9 @@ const printStyles = `
   #resumen-print-area ul, #resumen-print-area ol { padding-left: 20px; margin-bottom: 10px; }
   #resumen-print-area li { margin-bottom: 4px; }
   #resumen-print-area strong { font-weight: 700; }
+  #resumen-print-area table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px; }
+  #resumen-print-area th { background: #EAF4EE; font-weight: 700; padding: 6px 10px; text-align: left; border: 1px solid #ccc; }
+  #resumen-print-area td { padding: 5px 10px; border: 1px solid #ddd; }
 }
 `
 
@@ -132,12 +139,12 @@ export default function ResumenIA() {
       <style>{printStyles}</style>
 
       {/* Área oculta que se imprime como PDF */}
-      <div id="resumen-print-area" style={{ display: 'none' }}>
+      <div id="resumen-print-area">
         <h1>{licitacion.titulo || 'Sin título'}</h1>
         <div className="meta">
           {licitacion.organismo || ''}  ·  {formatFecha(licitacion.fechaLimite) || 'Sin plazo'}  ·  Exp. {licitacion.expediente || '—'}
         </div>
-        <ReactMarkdown>{resumen || ''}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{resumen || ''}</ReactMarkdown>
       </div>
 
       <button
@@ -211,7 +218,7 @@ export default function ResumenIA() {
 
         {resumen && !cargando && (
           <div className="resumen-md">
-            <ReactMarkdown>{resumen}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{resumen}</ReactMarkdown>
           </div>
         )}
       </section>
@@ -261,6 +268,10 @@ export default function ResumenIA() {
         .resumen-md ul, .resumen-md ol { padding-left: 20px; margin-bottom: 10px; }
         .resumen-md li { margin-bottom: 4px; }
         .resumen-md strong { font-weight: 700; color: #1a3d28; }
+        .resumen-md table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
+        .resumen-md th { background: #EAF4EE; color: #1a3d28; font-weight: 700; padding: 8px 12px; text-align: left; border: 1px solid #C9E2D2; }
+        .resumen-md td { padding: 7px 12px; border: 1px solid #e5e7eb; vertical-align: top; }
+        .resumen-md tr:nth-child(even) td { background: #f9fafb; }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </DashboardLayout>

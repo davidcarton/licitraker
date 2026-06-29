@@ -597,7 +597,7 @@ app.post('/api/resumen-ia', async (req, res) => {
 app.get('/api/resumenes-ia', async (req, res) => {
   try {
     const resumenes = await db('resumenes_ia')
-      .select('id', 'expediente', 'titulo', 'organismo', 'importe', 'fecha_limite', 'pliegos_encontrados', 'created_at')
+      .select('id', 'expediente', 'resumen', 'titulo', 'organismo', 'importe', 'fecha_limite', 'pliegos_encontrados', 'created_at')
       .orderBy('created_at', 'desc')
     res.json({ resumenes })
   } catch (err) {

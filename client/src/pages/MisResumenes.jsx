@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, Trash2, FileText, Calendar, Building2, AlertTriangle, ChevronRight } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import { formatFecha, formatImporte } from '../utils/format.js'
 
@@ -128,7 +129,7 @@ function ResumenDetalle({ item, onCerrar, onEliminar }) {
 
         <div style={{ padding: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
           <div className="resumen-md">
-            <ReactMarkdown>{item.resumen}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{item.resumen || ''}</ReactMarkdown>
           </div>
         </div>
       </div>
@@ -145,6 +146,10 @@ function ResumenDetalle({ item, onCerrar, onEliminar }) {
         .resumen-md ul, .resumen-md ol { padding-left: 20px; margin-bottom: 10px; }
         .resumen-md li { margin-bottom: 4px; }
         .resumen-md strong { font-weight: 700; color: #1a3d28; }
+        .resumen-md table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
+        .resumen-md th { background: #EAF4EE; color: #1a3d28; font-weight: 700; padding: 8px 12px; text-align: left; border: 1px solid #C9E2D2; }
+        .resumen-md td { padding: 7px 12px; border: 1px solid #e5e7eb; vertical-align: top; }
+        .resumen-md tr:nth-child(even) td { background: #f9fafb; }
       `}</style>
     </div>
   )
