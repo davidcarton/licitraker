@@ -53,6 +53,10 @@ router.get('/:id', async (req, res) => {
     res.json({
       id: empresa.id,
       nombre: empresa.nombre,
+      cif: empresa.cif || null,
+      direccion: empresa.direccion || null,
+      emailContacto: empresa.email_contacto || null,
+      telefono: empresa.telefono || null,
       plan: empresa.plan,
       precioMensual: empresa.precio_mensual != null ? Number(empresa.precio_mensual) : null,
       activa: empresa.activa,

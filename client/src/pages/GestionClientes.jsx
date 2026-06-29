@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AlertCircle, RefreshCw, ArrowLeft, Mail, Building2 } from 'lucide-react'
+import { AlertCircle, RefreshCw, ArrowLeft, Mail, Building2, KeyRound, ChevronDown, ChevronUp } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { formatImporte, formatFecha } from '../utils/format.js'
@@ -25,6 +25,77 @@ function iniciales(nombre) {
     .slice(0, 2)
     .map(p => p[0].toUpperCase())
     .join('')
+}
+
+function FilaDato({ label, valor }) {
+  if (!valor) return null
+  return (
+    <div>
+      <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{label}</span>
+      <span style={{ fontSize: 13, color: 'var(--negro)' }}>{valor}</span>
+    </div>
+  )
+}
+
+function ResetPasswordRow({ authFetch, clienteId, usuarioId }) {
+  const [abierto, setAbierto] = useState(false)
+  const [password, setPassword] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  const resetear = async () => {
+    if (password.length < 8) { setMsg('Mínimo 8 caracteres'); return }
+    setGuardando(true)
+    setMsg('')
+    try {
+      const res = await authFetch(`/api/admin/clientes/${clienteId}/usuarios/${usuarioId}/password`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      const datos = await res.json()
+      if (!res.ok) { setMsg(datos.error || 'Error'); return }
+      setMsg('Contraseña actualizada')
+      setPassword('')
+      setTimeout(() => { setMsg(''); setAbierto(false) }, 2000)
+    } catch {
+      setMsg('Error de conexión')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 6 }}>
+      <button
+        onClick={() => { setAbierto(a => !a); setMsg(''); setPassword('') }}
+        style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--n400)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)' }}
+      >
+        <KeyRound size={12} />
+        Restablecer contraseña
+        {abierto ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+      </button>
+      {abierto && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Nueva contraseña (mín. 8 caracteres)"
+            style={{ flex: 1, padding: '7px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--n100)', fontSize: 12, background: '#fff', fontFamily: 'var(--font-body)', boxSizing: 'border-box' }}
+          />
+          <button
+            onClick={resetear}
+            disabled={guardando}
+            style={{ padding: '7px 14px', borderRadius: 'var(--r-md)', background: 'var(--verde)', color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', opacity: guardando ? 0.7 : 1, whiteSpace: 'nowrap' }}
+          >
+            {guardando ? 'Guardando...' : 'Confirmar'}
+          </button>
+          {msg && <span style={{ fontSize: 12, fontWeight: 600, color: msg.includes('actualizada') ? 'var(--verde)' : 'var(--rojo)' }}>{msg}</span>}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function DetalleCliente({ clienteId, onVolver, onGuardado }) {
@@ -157,9 +228,20 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
 
       {detalle && (
         <>
-          {/* Plan y estado de la cuenta */}
+          {/* Cuenta */}
           <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>Cuenta</h3>
+
+            {/* Datos de la empresa */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px 24px', padding: '16px', background: 'var(--gris-fondo)', borderRadius: 'var(--r-md)' }}>
+              <FilaDato label="Nombre empresa" valor={detalle.nombre} />
+              <FilaDato label="CIF" valor={detalle.cif} />
+              <FilaDato label="Dirección" valor={detalle.direccion} />
+              <FilaDato label="Email de contacto" valor={detalle.emailContacto} />
+              <FilaDato label="Teléfono" valor={detalle.telefono} />
+            </div>
+
+            {/* Plan y estado */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'end' }}>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Plan</label>
@@ -184,6 +266,7 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
                 </div>
               </div>
             </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <button
                 onClick={guardar}
@@ -194,6 +277,62 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
               </button>
               {mensajeGuardado && <span style={{ fontSize: 13, color: 'var(--verde)', fontWeight: 600 }}>{mensajeGuardado}</span>}
             </div>
+
+            {/* Usuarios de la empresa */}
+            <div style={{ borderTop: '1px solid var(--n100)', paddingTop: 16 }}>
+              <h4 style={{ fontFamily: 'var(--font-titulo)', fontSize: 13, fontWeight: 700, color: 'var(--negro)', margin: '0 0 12px' }}>
+                Usuarios ({detalle.usuarios.length})
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {detalle.usuarios.map(u => (
+                  <div key={u.id} style={{ padding: '12px 14px', borderRadius: 'var(--r-md)', background: 'var(--gris-fondo)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--verde-claro)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--verde)', flexShrink: 0 }}>
+                        {iniciales(u.nombre)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--negro)' }}>{u.nombre}</div>
+                        <div style={{ fontSize: 12, color: 'var(--n400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n400)', background: 'var(--n100)', padding: '3px 10px', borderRadius: 100, whiteSpace: 'nowrap' }}>{u.rol}</span>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: u.activo ? 'var(--verde)' : 'var(--rojo)', flexShrink: 0 }} title={u.activo ? 'Activo' : 'Inactivo'} />
+                    </div>
+                    <ResetPasswordRow authFetch={authFetch} clienteId={clienteId} usuarioId={u.id} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Preferencias */}
+          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>Preferencias configuradas</h3>
+            {!detalle.preferencias ? (
+              <p style={{ fontSize: 13, color: 'var(--n400)', margin: 0 }}>Sin preferencias configuradas todavía.</p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', fontSize: 13 }}>
+                <div>
+                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tipos de obra</span>
+                  {(detalle.preferencias.tiposObra || []).join(', ') || '—'}
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Provincias</span>
+                  {(detalle.preferencias.provincias || []).join(', ') || '—'}
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Importe mínimo</span>
+                  {detalle.preferencias.importeMin != null ? `${formatImporte(detalle.preferencias.importeMin)} €` : '—'}
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Importe máximo</span>
+                  {detalle.preferencias.importeMax != null ? `${formatImporte(detalle.preferencias.importeMax)} €` : '—'}
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Frecuencia de alerta</span>
+                  {detalle.preferencias.frecuenciaAlerta || '—'}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Email */}
@@ -233,59 +372,6 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
                   {mensajeEmail}
                 </span>
               )}
-            </div>
-          </div>
-
-          {/* Preferencias */}
-          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>Preferencias configuradas</h3>
-            {!detalle.preferencias ? (
-              <p style={{ fontSize: 13, color: 'var(--n400)', margin: 0 }}>Sin preferencias configuradas todavía.</p>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', fontSize: 13 }}>
-                <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tipos de obra</span>
-                  {(detalle.preferencias.tiposObra || []).join(', ') || '—'}
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Provincias</span>
-                  {(detalle.preferencias.provincias || []).join(', ') || '—'}
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Importe mínimo</span>
-                  {detalle.preferencias.importeMin != null ? `${formatImporte(detalle.preferencias.importeMin)} €` : '—'}
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Importe máximo</span>
-                  {detalle.preferencias.importeMax != null ? `${formatImporte(detalle.preferencias.importeMax)} €` : '—'}
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Frecuencia de alerta</span>
-                  {detalle.preferencias.frecuenciaAlerta || '—'}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Usuarios */}
-          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
-              Usuarios ({detalle.usuarios.length})
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {detalle.usuarios.map(u => (
-                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 'var(--r-md)', background: 'var(--gris-fondo)' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--verde-claro)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--verde)', flexShrink: 0 }}>
-                    {iniciales(u.nombre)}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--negro)' }}>{u.nombre}</div>
-                    <div style={{ fontSize: 12, color: 'var(--n400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n400)', background: 'var(--n100)', padding: '3px 10px', borderRadius: 100, whiteSpace: 'nowrap' }}>{u.rol}</span>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: u.activo ? 'var(--verde)' : 'var(--rojo)', flexShrink: 0 }} title={u.activo ? 'Activo' : 'Inactivo'} />
-                </div>
-              ))}
             </div>
           </div>
         </>
