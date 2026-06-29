@@ -13,6 +13,7 @@ const { PDFDocument } = require('pdf-lib')
 
 const { obtenerPliegosPDF } = require('./src/utils/pliegos')
 const db = require('./src/db')
+const auth = require('./src/middleware/auth')
 
 const authRoutes = require('./src/routes/auth')
 const licitacionesRoutes = require('./src/routes/licitaciones')
@@ -588,19 +589,20 @@ async function generarResumenConDocumentos(anthropic, prompt, pdfs) {
   }
 }
 
-app.post('/api/resumen-ia', async (req, res) => {
+app.post('/api/resumen-ia', auth, async (req, res) => {
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'El servicio de resumen con IA no está configurado' })
     }
 
     const { titulo, organismo, importe, fechaLimite, cpv, enlace, expediente } = req.body || {}
+    const empresa_id = req.user.empresa_id
 
     if (expediente) {
-      const cacheado = await db('resumenes_ia').where({ expediente }).first()
+      const cacheado = await db('resumenes_ia').where({ expediente, empresa_id }).first()
       if (cacheado) {
         if (!cacheado.titulo && titulo) {
-          await db('resumenes_ia').where({ expediente }).update({
+          await db('resumenes_ia').where({ expediente, empresa_id }).update({
             titulo, organismo,
             importe: importe ?? cacheado.importe,
             fecha_limite: fechaLimite ?? cacheado.fecha_limite,
@@ -625,12 +627,12 @@ app.post('/api/resumen-ia', async (req, res) => {
     if (expediente) {
       await db('resumenes_ia')
         .insert({
-          expediente, resumen, pliegos_encontrados: pdfs.length,
+          expediente, empresa_id, resumen, pliegos_encontrados: pdfs.length,
           titulo, organismo, importe, fecha_limite: fechaLimite,
           tokens_input: resultado.input, tokens_output: resultado.output,
           coste_euros: resultado.costeEuros ?? null,
         })
-        .onConflict('expediente').merge()
+        .onConflict(['expediente', 'empresa_id']).merge()
     }
 
     res.json({ resumen })
@@ -640,19 +642,35 @@ app.post('/api/resumen-ia', async (req, res) => {
   }
 })
 
-app.get('/api/resumenes-ia', async (req, res) => {
+app.get('/api/resumenes-ia', auth, async (req, res) => {
   try {
-    const resumenes = await db('resumenes_ia')
-      .select('id', 'expediente', 'resumen', 'titulo', 'organismo', 'importe', 'fecha_limite', 'pliegos_encontrados', 'coste_euros', 'created_at')
-      .orderBy('created_at', 'desc')
-    res.json({ resumenes })
+    const esSuperadmin = req.user.rol === 'superadmin'
+    let query = db('resumenes_ia')
+      .select(
+        'resumenes_ia.id', 'resumenes_ia.expediente', 'resumenes_ia.resumen',
+        'resumenes_ia.titulo', 'resumenes_ia.organismo', 'resumenes_ia.importe',
+        'resumenes_ia.fecha_limite', 'resumenes_ia.pliegos_encontrados',
+        'resumenes_ia.coste_euros', 'resumenes_ia.created_at',
+      )
+      .orderBy('resumenes_ia.created_at', 'desc')
+
+    if (esSuperadmin) {
+      query = query
+        .leftJoin('empresas', 'resumenes_ia.empresa_id', 'empresas.id')
+        .select('empresas.nombre as empresa_nombre')
+    } else {
+      query = query.where('resumenes_ia.empresa_id', req.user.empresa_id)
+    }
+
+    const resumenes = await query
+    res.json({ resumenes, esSuperadmin })
   } catch (err) {
     logger.error('api', 'Error al listar resumenes-ia: ' + err.message)
     res.status(500).json({ error: 'No se han podido cargar los resúmenes' })
   }
 })
 
-app.get('/api/resumenes-ia/:expediente', async (req, res) => {
+app.get('/api/resumenes-ia/:expediente', auth, async (req, res) => {
   try {
     const item = await db('resumenes_ia').where({ expediente: req.params.expediente }).first()
     if (!item) return res.status(404).json({ error: 'Resumen no encontrado' })
@@ -663,9 +681,13 @@ app.get('/api/resumenes-ia/:expediente', async (req, res) => {
   }
 })
 
-app.delete('/api/resumenes-ia/:expediente', async (req, res) => {
+app.delete('/api/resumenes-ia/:expediente', auth, async (req, res) => {
   try {
-    const borrados = await db('resumenes_ia').where({ expediente: req.params.expediente }).delete()
+    const esSuperadmin = req.user.rol === 'superadmin'
+    const filtro = esSuperadmin
+      ? { expediente: req.params.expediente }
+      : { expediente: req.params.expediente, empresa_id: req.user.empresa_id }
+    const borrados = await db('resumenes_ia').where(filtro).delete()
     if (borrados === 0) return res.status(404).json({ error: 'Resumen no encontrado' })
     res.json({ ok: true })
   } catch (err) {

@@ -4,6 +4,7 @@ import { Sparkles, Trash2, FileText, Calendar, Building2, AlertTriangle, Chevron
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 import { formatFecha, formatImporte } from '../utils/format.js'
 
 function ConfirmModal({ titulo, onConfirm, onCancel }) {
@@ -56,13 +57,17 @@ function ConfirmModal({ titulo, onConfirm, onCancel }) {
 
 export default function MisResumenes() {
   const navigate = useNavigate()
+  const { usuario } = useAuth()
+  const esSuperadmin = usuario?.rol === 'superadmin'
   const [resumenes, setResumenes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [expandido, setExpandido] = useState(null)
   const [confirmarEliminar, setConfirmarEliminar] = useState(null)
 
   useEffect(() => {
-    fetch('/api/resumenes-ia')
+    fetch('/api/resumenes-ia', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    })
       .then(r => r.json())
       .then(d => setResumenes(d.resumenes || []))
       .catch(() => {})
@@ -70,7 +75,10 @@ export default function MisResumenes() {
   }, [])
 
   const eliminar = async (expediente) => {
-    await fetch(`/api/resumenes-ia/${encodeURIComponent(expediente)}`, { method: 'DELETE' })
+    await fetch(`/api/resumenes-ia/${encodeURIComponent(expediente)}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    })
     setResumenes(prev => prev.filter(r => r.expediente !== expediente))
     if (expandido === expediente) setExpandido(null)
     setConfirmarEliminar(null)
@@ -151,12 +159,23 @@ export default function MisResumenes() {
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700,
-                      color: 'var(--negro)', lineHeight: 1.3,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {item.titulo || <span style={{ color: 'var(--n400)', fontWeight: 400 }}>{item.expediente}</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <div style={{
+                        fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700,
+                        color: 'var(--negro)', lineHeight: 1.3,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {item.titulo || <span style={{ color: 'var(--n400)', fontWeight: 400 }}>{item.expediente}</span>}
+                      </div>
+                      {esSuperadmin && item.empresa_nombre && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, color: '#6B7280',
+                          background: '#F3F4F6', padding: '2px 6px',
+                          borderRadius: 99, whiteSpace: 'nowrap', flexShrink: 0,
+                        }}>
+                          {item.empresa_nombre}
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: 14, marginTop: 4, flexWrap: 'wrap' }}>
                       {item.organismo && (
@@ -176,7 +195,7 @@ export default function MisResumenes() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    {item.coste_euros != null && (
+                    {esSuperadmin && item.coste_euros != null && (
                       <span style={{
                         fontSize: 11, fontWeight: 700,
                         color: '#3D7A4F',

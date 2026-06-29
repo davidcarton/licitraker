@@ -74,7 +74,10 @@ export default function ResumenIA() {
 
     fetch('/api/resumen-ia', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
       body: JSON.stringify({
         titulo: licitacion.titulo,
         organismo: licitacion.organismo,
