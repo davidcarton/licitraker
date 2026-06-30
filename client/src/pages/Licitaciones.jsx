@@ -111,7 +111,6 @@ export default function Licitaciones() {
   const [error, setError] = useState(null)
   const [seleccionada, setSeleccionada] = useState(null)
 
-  const [textoBusqueda, setTextoBusqueda] = useState('')
   const [filtroUrgencia, setFiltroUrgencia] = useState('')
   const [filtroImporte, setFiltroImporte] = useState('')
   const [filtroProvincia, setFiltroProvincia] = useState('')
@@ -205,10 +204,6 @@ export default function Licitaciones() {
         const hoy = new Date(); hoy.setHours(0,0,0,0)
         if (new Date(l.fechaLimite + 'T00:00:00') <= hoy) return false
       }
-      if (textoBusqueda) {
-        const t = textoBusqueda.toLowerCase()
-        if (!l.titulo?.toLowerCase().includes(t) && !l.organismo?.toLowerCase().includes(t)) return false
-      }
       if (filtroUrgencia && tipoBadge(l.fechaLimite) !== filtroUrgencia) return false
       if (filtroImporte && l.importe != null) {
         const imp = parseFloat(l.importe)
@@ -220,7 +215,7 @@ export default function Licitaciones() {
       if (filtroProvincia && l.provincia !== filtroProvincia) return false
       return true
     })
-  }, [licitaciones, textoBusqueda, filtroUrgencia, filtroImporte, filtroProvincia])
+  }, [licitaciones, filtroUrgencia, filtroImporte, filtroProvincia])
 
   const mostrandoCPV = cpvResultados !== null
 
@@ -256,20 +251,19 @@ export default function Licitaciones() {
       title="Licitaciones"
       filtros={(
         <>
+          <BarraBusquedaCPV
+            valor={cpvQuery}
+            onChange={handleCpvChange}
+            onBuscar={buscarCPV}
+            cargando={cpvCargando}
+          />
           <FiltroBarra
-            onBuscar={setTextoBusqueda}
             onFiltroUrgencia={setFiltroUrgencia}
             onFiltroImporte={setFiltroImporte}
             onFiltroProvincia={setFiltroProvincia}
             provincias={provincias}
             onActualizar={actualizar}
             cargando={cargando}
-          />
-          <BarraBusquedaCPV
-            valor={cpvQuery}
-            onChange={handleCpvChange}
-            onBuscar={buscarCPV}
-            cargando={cpvCargando}
           />
         </>
       )}

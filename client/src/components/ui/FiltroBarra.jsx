@@ -1,5 +1,5 @@
-import { Search, RefreshCw, AlertCircle, Banknote, ChevronDown, MapPin } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { RefreshCw, AlertCircle, Banknote, ChevronDown, MapPin } from 'lucide-react'
+import { useState } from 'react'
 
 const inputBase = {
   width: '100%',
@@ -44,17 +44,10 @@ function useFocusStyle() {
   }
 }
 
-export default function FiltroBarra({ onBuscar, onFiltroUrgencia, onFiltroImporte, onFiltroProvincia, provincias = [], onActualizar, cargando }) {
-  const debounce = useRef(null)
-  const searchFocus = useFocusStyle()
+export default function FiltroBarra({ onFiltroUrgencia, onFiltroImporte, onFiltroProvincia, provincias = [], onActualizar, cargando }) {
   const urgFocus = useFocusStyle()
   const impFocus = useFocusStyle()
   const provFocus = useFocusStyle()
-
-  function handleTexto(e) {
-    clearTimeout(debounce.current)
-    debounce.current = setTimeout(() => onBuscar(e.target.value), 300)
-  }
 
   return (
     <div style={{
@@ -71,22 +64,6 @@ export default function FiltroBarra({ onBuscar, onFiltroUrgencia, onFiltroImport
         flexWrap: 'wrap',
         alignItems: 'center',
       }}>
-        {/* Buscador */}
-        <div style={{ position: 'relative', flex: 1, minWidth: 240 }}>
-          <Search size={15} style={{
-            position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-            color: 'var(--n300)', pointerEvents: 'none',
-          }} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre u organismo..."
-            onChange={handleTexto}
-            onFocus={searchFocus.onFocus}
-            onBlur={searchFocus.onBlur}
-            style={{ ...inputBase, ...searchFocus.style }}
-          />
-        </div>
-
         {/* Select urgencia */}
         <FilterWrapper icon={<AlertCircle size={14} />}>
           <select
