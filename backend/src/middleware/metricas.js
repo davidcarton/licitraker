@@ -18,11 +18,40 @@ function medirLatencia(req, res, next) {
   next()
 }
 
+const CAUSAS = {
+  401: (tieneToken) => tieneToken ? 'sesión expirada' : 'sin autenticación',
+  403: () => 'acceso denegado',
+  404: () => 'ruta no encontrada',
+  405: () => 'método no permitido',
+}
+
 function registrarPeticionesFallidas(logger) {
   return (req, res, next) => {
+    const inicio = Date.now()
     res.on('finish', () => {
-      if (res.statusCode >= 400) {
-        logger.warn('http', `${req.method} ${req.originalUrl} → ${res.statusCode}`)
+      const status = res.statusCode
+      if (status < 400) return
+
+      const ms = Date.now() - inicio
+      const ip = (req.headers['x-forwarded-for'] || req.ip || '?').split(',')[0].trim()
+      const tieneToken = !!req.headers.authorization
+      const causa = CAUSAS[status] ? CAUSAS[status](tieneToken) : null
+      const sufijo = causa ? ` (${causa})` : ''
+      const msg = `${req.method} ${req.originalUrl} → ${status}${sufijo}`
+      const extra = { method: req.method, url: req.originalUrl, status, ms, ip }
+
+      if (status === 401) {
+        // 401 son ruido esperado (sesión expirada / sin token): nivel info
+        logger.info('http', msg, extra)
+      } else if (status === 403) {
+        logger.warn('http', msg, extra)
+      } else if (status === 404) {
+        logger.warn('http', msg, extra)
+      } else if (status >= 500) {
+        const ua = (req.headers['user-agent'] || '').slice(0, 100)
+        logger.error('http', msg, { ...extra, ua })
+      } else {
+        logger.warn('http', msg, extra)
       }
     })
     next()
