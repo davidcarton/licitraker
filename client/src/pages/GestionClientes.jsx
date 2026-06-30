@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AlertCircle, RefreshCw, ArrowLeft, Mail, Building2, KeyRound, ChevronDown, ChevronUp } from 'lucide-react'
+import { AlertCircle, RefreshCw, ArrowLeft, Mail, Building2, KeyRound, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { formatImporte, formatFecha } from '../utils/format.js'
@@ -98,6 +98,60 @@ function ResetPasswordRow({ authFetch, clienteId, usuarioId }) {
   )
 }
 
+function ModalEliminarCliente({ nombre, eliminando, onConfirm, onCancel }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: 'var(--r-xl)', padding: '28px 32px',
+        maxWidth: 440, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <Trash2 size={20} color="var(--rojo)" />
+          <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 16, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
+            Eliminar cliente
+          </h3>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--n500)', lineHeight: 1.6, marginBottom: 8 }}>
+          ¿Seguro que quieres eliminar a <strong style={{ color: 'var(--negro)' }}>"{nombre}"</strong>?
+        </p>
+        <p style={{ fontSize: 12, color: 'var(--rojo)', lineHeight: 1.6, marginBottom: 24 }}>
+          Se borrarán todos sus usuarios, licitaciones guardadas y resúmenes IA. Esta acción no se puede deshacer.
+        </p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button
+            onClick={onCancel}
+            disabled={eliminando}
+            style={{
+              padding: '9px 18px', borderRadius: 'var(--r-md)',
+              border: '1px solid var(--n100)', background: '#fff',
+              color: 'var(--n500)', fontSize: 13, fontWeight: 600,
+              fontFamily: 'var(--font-body)', cursor: 'pointer',
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={eliminando}
+            style={{
+              padding: '9px 18px', borderRadius: 'var(--r-md)',
+              background: 'var(--rojo)', color: '#fff',
+              border: 'none', fontSize: 13, fontWeight: 700,
+              fontFamily: 'var(--font-body)', cursor: 'pointer',
+              opacity: eliminando ? 0.7 : 1,
+            }}
+          >
+            {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DetalleCliente({ clienteId, onVolver, onGuardado }) {
   const { authFetch } = useAuth()
   const [detalle, setDetalle] = useState(null)
@@ -113,6 +167,9 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
   const [cuerpo, setCuerpo] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [mensajeEmail, setMensajeEmail] = useState('')
+
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
 
   const cargarDetalle = useCallback(async () => {
     setCargando(true)
@@ -189,6 +246,22 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
       setMensajeEmail('No se ha podido conectar con el servidor')
     } finally {
       setEnviando(false)
+    }
+  }
+
+  const eliminarCliente = async () => {
+    setEliminando(true)
+    try {
+      const res = await authFetch(`/api/admin/clientes/${clienteId}`, { method: 'DELETE' })
+      const datos = await res.json()
+      if (!res.ok) { setError(datos.error || 'No se ha podido eliminar el cliente'); setConfirmarEliminar(false); return }
+      onGuardado()
+      onVolver()
+    } catch {
+      setError('No se ha podido conectar con el servidor')
+      setConfirmarEliminar(false)
+    } finally {
+      setEliminando(false)
     }
   }
 
@@ -374,7 +447,38 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
               )}
             </div>
           </div>
+          {/* Eliminar cliente */}
+          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--rojo-borde)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--rojo)', margin: 0 }}>Eliminar cliente</h3>
+            <p style={{ fontSize: 13, color: 'var(--n500)', margin: 0, lineHeight: 1.6 }}>
+              Elimina permanentemente esta empresa y todos sus datos: usuarios, licitaciones guardadas y resúmenes IA.
+            </p>
+            <div>
+              <button
+                onClick={() => setConfirmarEliminar(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 20px', borderRadius: 'var(--r-md)',
+                  background: 'var(--rojo-bg)', color: 'var(--rojo)',
+                  border: '1px solid var(--rojo-borde)',
+                  fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: 'pointer',
+                }}
+              >
+                <Trash2 size={15} />
+                Eliminar cliente
+              </button>
+            </div>
+          </div>
         </>
+      )}
+
+      {confirmarEliminar && detalle && (
+        <ModalEliminarCliente
+          nombre={detalle.nombre}
+          eliminando={eliminando}
+          onConfirm={eliminarCliente}
+          onCancel={() => setConfirmarEliminar(false)}
+        />
       )}
     </div>
   )

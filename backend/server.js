@@ -696,6 +696,21 @@ app.delete('/api/resumenes-ia/:expediente', auth, async (req, res) => {
   }
 })
 
+app.delete('/api/mi-cuenta', auth, async (req, res) => {
+  try {
+    const empresa = await db('empresas')
+      .where('id', req.user.empresa_id)
+      .whereNot('plan', 'admin')
+      .first()
+    if (!empresa) return res.status(404).json({ error: 'Cuenta no encontrada' })
+    await db('empresas').where('id', empresa.id).del()
+    res.json({ ok: true })
+  } catch (err) {
+    logger.error('api', 'Error al eliminar cuenta: ' + err.message)
+    res.status(500).json({ error: 'No se ha podido eliminar la cuenta' })
+  }
+})
+
 app.get('/api/estado', (req, res) => {
   res.json({
     estado: 'ok',

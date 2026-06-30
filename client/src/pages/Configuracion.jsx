@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Save, CheckCircle, X,
-  BarChart2, TrendingUp, Database, Cloud, Table2, Mail,
+  BarChart2, TrendingUp, Database, Cloud, Table2, Mail, Trash2,
 } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const TABS = [
   { id: 'perfil', label: 'Perfil' },
@@ -156,23 +158,112 @@ function Toggle({ checked, onChange }) {
 }
 
 function TabPerfil({ mostrarToast }) {
+  const { authFetch, logout } = useAuth()
+  const navigate = useNavigate()
   const [nombre, setNombre] = useState('Constructora García S.L.')
   const [cif, setCif] = useState('B12345678')
   const [email, setEmail] = useState('info@constructoragarcia.es')
   const [telefono, setTelefono] = useState('948 123 456')
 
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
+  const [errorEliminar, setErrorEliminar] = useState('')
+
+  const eliminarCuenta = async () => {
+    setEliminando(true)
+    setErrorEliminar('')
+    try {
+      const res = await authFetch('/api/mi-cuenta', { method: 'DELETE' })
+      const datos = await res.json()
+      if (!res.ok) { setErrorEliminar(datos.error || 'No se ha podido eliminar la cuenta'); return }
+      logout()
+      navigate('/login', { replace: true })
+    } catch {
+      setErrorEliminar('No se ha podido conectar con el servidor')
+    } finally {
+      setEliminando(false)
+    }
+  }
+
   return (
-    <Card title="Datos de la empresa" subtitle="Esta información se usa para personalizar tu panel">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <Campo label="Nombre de la empresa" value={nombre} onChange={setNombre} />
-        <Campo label="CIF" value={cif} onChange={setCif} />
-        <Campo label="Email de contacto" value={email} onChange={setEmail} type="email" />
-        <Campo label="Teléfono" value={telefono} onChange={setTelefono} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <Card title="Datos de la empresa" subtitle="Esta información se usa para personalizar tu panel">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          <Campo label="Nombre de la empresa" value={nombre} onChange={setNombre} />
+          <Campo label="CIF" value={cif} onChange={setCif} />
+          <Campo label="Email de contacto" value={email} onChange={setEmail} type="email" />
+          <Campo label="Teléfono" value={telefono} onChange={setTelefono} />
+        </div>
+        <div style={{ marginTop: 20 }}>
+          <BotonGuardar onClick={() => mostrarToast('Datos de la empresa guardados')} />
+        </div>
+      </Card>
+
+      {/* Eliminar cuenta */}
+      <div style={{
+        background: '#fff', borderRadius: 'var(--r-xl)',
+        border: '1px solid var(--rojo-borde)', boxShadow: 'var(--shadow-card)',
+        padding: '22px 24px',
+      }}>
+        <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 15, fontWeight: 700, color: 'var(--rojo)', margin: '0 0 6px' }}>
+          Eliminar cuenta
+        </h3>
+        <p style={{ fontSize: 13, color: 'var(--n500)', margin: '0 0 18px', lineHeight: 1.6 }}>
+          Elimina permanentemente tu cuenta y todos los datos asociados: usuarios, licitaciones guardadas y resúmenes IA. Esta acción no se puede deshacer.
+        </p>
+        {!confirmarEliminar ? (
+          <button
+            onClick={() => setConfirmarEliminar(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 20px', borderRadius: 'var(--r-md)',
+              background: 'var(--rojo-bg)', color: 'var(--rojo)',
+              border: '1px solid var(--rojo-borde)',
+              fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: 'pointer',
+            }}
+          >
+            <Trash2 size={15} />
+            Eliminar mi cuenta
+          </button>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--rojo)', margin: 0 }}>
+              ¿Estás seguro? Esta acción eliminará todos tus datos de forma permanente.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => { setConfirmarEliminar(false); setErrorEliminar('') }}
+                disabled={eliminando}
+                style={{
+                  padding: '9px 18px', borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--n100)', background: '#fff',
+                  color: 'var(--n500)', fontSize: 13, fontWeight: 600,
+                  fontFamily: 'var(--font-body)', cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={eliminarCuenta}
+                disabled={eliminando}
+                style={{
+                  padding: '9px 18px', borderRadius: 'var(--r-md)',
+                  background: 'var(--rojo)', color: '#fff',
+                  border: 'none', fontSize: 13, fontWeight: 700,
+                  fontFamily: 'var(--font-body)', cursor: 'pointer',
+                  opacity: eliminando ? 0.7 : 1,
+                }}
+              >
+                {eliminando ? 'Eliminando...' : 'Sí, eliminar mi cuenta'}
+              </button>
+            </div>
+            {errorEliminar && (
+              <span style={{ fontSize: 12, color: 'var(--rojo)', fontWeight: 600 }}>{errorEliminar}</span>
+            )}
+          </div>
+        )}
       </div>
-      <div style={{ marginTop: 20 }}>
-        <BotonGuardar onClick={() => mostrarToast('Datos de la empresa guardados')} />
-      </div>
-    </Card>
+    </div>
   )
 }
 

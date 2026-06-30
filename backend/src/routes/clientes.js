@@ -202,4 +202,17 @@ router.post('/:id/email', async (req, res) => {
   }
 })
 
+router.delete('/:id', async (req, res) => {
+  try {
+    const empresa = await db('empresas').whereNot('plan', 'admin').where('id', req.params.id).first()
+    if (!empresa) return res.status(404).json({ error: 'Cliente no encontrado' })
+    await db('empresas').where('id', empresa.id).del()
+    logger.info?.('clientes', `Empresa eliminada: ${empresa.nombre} (id=${empresa.id})`)
+    res.json({ ok: true })
+  } catch (err) {
+    logger.error('clientes', 'Error al eliminar cliente: ' + err.message)
+    res.status(500).json({ error: 'No se ha podido eliminar el cliente' })
+  }
+})
+
 module.exports = router
