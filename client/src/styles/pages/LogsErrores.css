@@ -1,0 +1,160 @@
+/* ── LogsErrores ─────────────────────────────────────────────────────────────── */
+
+/* ─── Cabecera ────────────────────────────────────────────────────────────── */
+.le-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.le-titulo {
+  font-family: var(--font-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.le-subtitulo { font-size: 12px; color: var(--n400); margin: 4px 0 0; }
+.le-btn-actualizar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--r-md);
+  background: var(--verde);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  transition: background var(--transition);
+}
+.le-btn-actualizar:hover:not(:disabled) { background: var(--verde-medio); }
+.le-btn-actualizar:disabled { opacity: 0.7; }
+
+/* ─── Error banner ────────────────────────────────────────────────────────── */
+.le-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--rojo-bg);
+  border: 1px solid var(--rojo-borde);
+  color: var(--rojo);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* ─── StatCards ───────────────────────────────────────────────────────────── */
+.le-stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.le-stat-card {
+  flex: 1;
+  min-width: 100px;
+  border-radius: var(--r-lg);
+  padding: 14px 18px;
+  border: 1px solid;
+}
+.le-stat-card--error { background: var(--rojo-bg); border-color: var(--rojo-borde); --val-color: var(--rojo); }
+.le-stat-card--warn  { background: var(--ambar-bg); border-color: var(--ambar-borde); --val-color: var(--ambar); }
+.le-stat-card--info  { background: var(--g50);      border-color: var(--g200);        --val-color: var(--g700); }
+.le-stat-card__valor {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--val-color);
+  font-family: var(--font-titulo);
+  line-height: 1;
+}
+.le-stat-card__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--val-color);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Tabs de filtros ─────────────────────────────────────────────────────── */
+.le-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--n100); margin-bottom: 16px; }
+.le-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  color: var(--n400);
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.le-tab--activo { color: var(--negro); border-bottom-color: var(--verde); }
+.le-tab__count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+  background: var(--n100);
+  color: var(--n400);
+}
+.le-tab--activo .le-tab__count { background: var(--verde-claro); color: var(--verde); }
+
+/* ─── Spinner cargando ────────────────────────────────────────────────────── */
+.le-spinner-wrap { display: flex; align-items: center; gap: 10px; padding: 24px; }
+.le-spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid var(--n100);
+  border-top-color: var(--verde);
+  animation: spin 0.8s linear infinite;
+}
+.le-spinner-text { font-size: 13px; color: var(--n400); }
+
+/* ─── Vacío ───────────────────────────────────────────────────────────────── */
+.le-vacio { padding: 32px 0; text-align: center; }
+.le-vacio__texto { font-size: 14px; color: var(--n400); margin: 0; }
+
+/* ─── Lista de logs ───────────────────────────────────────────────────────── */
+.le-lista { display: flex; flex-direction: column; gap: 6px; }
+
+/* ─── Fila de log ─────────────────────────────────────────────────────────── */
+.le-fila-log {
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid;
+}
+.le-fila-log--error { background: #FFF5F5;          border-color: var(--rojo-borde);  }
+.le-fila-log--warn  { background: #FFFBF0;          border-color: var(--ambar-borde); }
+.le-fila-log--info  { background: var(--gris-fondo); border-color: var(--g200);       }
+.le-fila-log__inner { display: flex; align-items: flex-start; gap: 10px; }
+.le-fila-log__cuerpo { flex: 1; min-width: 0; }
+.le-fila-log__mensaje { font-size: 13px; font-weight: 700; color: var(--negro); line-height: 1.4; word-break: break-word; }
+.le-fila-log__contexto { font-size: 11px; font-weight: 600; color: var(--n400); margin-right: 6px; }
+.le-fila-log__meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 6px; }
+.le-fila-log__meta-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--n400); }
+.le-fila-log__ua { font-size: 11px; color: var(--n300); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.le-status--error  { font-size: 11px; font-weight: 700; color: var(--rojo); }
+.le-status--warn   { font-size: 11px; font-weight: 700; color: var(--ambar); }
+.le-status--normal { font-size: 11px; font-weight: 700; color: var(--n400); }
+
+/* ─── NivelBadge ──────────────────────────────────────────────────────────── */
+.le-nivel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.le-nivel-badge--error { background: var(--rojo-bg); border-color: var(--rojo-borde); color: var(--rojo); }
+.le-nivel-badge--warn  { background: var(--ambar-bg); border-color: var(--ambar-borde); color: var(--ambar); }
+.le-nivel-badge--info  { background: var(--g50);      border-color: var(--g200);        color: var(--g700); }

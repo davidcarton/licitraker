@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
+import '../../styles/components/auth/RutaProtegida.css'
 
 export default function RutaProtegida({ children }) {
   const { autenticado, cargando } = useAuth()
@@ -7,14 +8,8 @@ export default function RutaProtegida({ children }) {
 
   if (cargando) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{
-          width: 40, height: 40,
-          borderRadius: '50%',
-          border: '3px solid var(--g100)',
-          borderTopColor: 'var(--g700)',
-          animation: 'spin 0.8s linear infinite',
-        }} />
+      <div className="ruta-protegida">
+        <div className="ruta-protegida__ring" />
       </div>
     )
   }

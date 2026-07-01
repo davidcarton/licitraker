@@ -1,0 +1,95 @@
+/* ── EstadoSistema ───────────────────────────────────────────────────────────── */
+
+/* ─── Botón actualizar ────────────────────────────────────────────────────── */
+.es-btn-wrap { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+.es-btn-actualizar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--r-md);
+  background: var(--verde);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  transition: background var(--transition);
+}
+.es-btn-actualizar:hover:not(:disabled) { background: var(--verde-medio); }
+.es-btn-actualizar:disabled { opacity: 0.7; }
+
+/* ─── Error banner ────────────────────────────────────────────────────────── */
+.es-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--rojo-bg);
+  border: 1px solid var(--rojo-borde);
+  color: var(--rojo);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* ─── KPI grid ────────────────────────────────────────────────────────────── */
+.es-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* ─── Cards ───────────────────────────────────────────────────────────────── */
+.es-cards { display: flex; flex-direction: column; gap: 20px; }
+.es-card {
+  background: #fff;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--n100);
+  box-shadow: var(--shadow-card);
+  padding: 22px 24px;
+}
+.es-card__titulo { font-family: var(--font-titulo); font-size: 15px; font-weight: 700; color: var(--negro); margin: 0; }
+.es-card__subtitulo { font-size: 12px; color: var(--n400); margin-top: 4px; margin-bottom: 0; }
+.es-card__body { margin-top: 18px; }
+
+/* ─── InfoItem ────────────────────────────────────────────────────────────── */
+.es-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.es-info-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--n400);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.es-info-valor { font-size: 14px; font-weight: 600; color: var(--negro); }
+.es-info-valor--alerta { color: var(--rojo); }
+
+/* ─── Docker ──────────────────────────────────────────────────────────────── */
+.es-docker-vacio { font-size: 13px; color: var(--n400); }
+.es-docker-lista { display: flex; flex-direction: column; gap: 8px; }
+.es-docker-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--gris-fondo);
+}
+.es-docker-nombre-wrap { display: flex; align-items: center; gap: 10px; }
+.es-docker-nombre { font-size: 13px; font-weight: 700; color: var(--negro); }
+.es-docker-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 100px;
+}
+.es-docker-badge--up      { background: var(--verde-claro); color: var(--verde); }
+.es-docker-badge--stopped { background: var(--rojo-bg);     color: var(--rojo);  }

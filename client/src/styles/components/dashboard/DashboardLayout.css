@@ -1,0 +1,42 @@
+/* ── DashboardLayout ─────────────────────────────────────────────────────────── */
+
+.dash-layout { display: flex; min-height: 100vh; background: var(--gris-fondo); }
+
+.dash-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-left: 200px;
+}
+
+.dash-main {
+  padding: 28px clamp(1rem, 3vw, 2.5rem);
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Overlay para el sidebar en móvil */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 55;
+}
+
+@media (max-width: 1024px) {
+  .dash-content { margin-left: 64px; }
+}
+
+@media (max-width: 640px) {
+  .dash-content { margin-left: 0; }
+  .sidebar-overlay { display: block; }
+}
+
+@media (min-width: 641px) {
+  .sidebar-overlay { display: none !important; }
+}

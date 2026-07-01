@@ -1,0 +1,242 @@
+/* ── VisionNegocio ───────────────────────────────────────────────────────────── */
+
+/* ─── Cabecera ────────────────────────────────────────────────────────────── */
+.vn-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.vn-titulo {
+  font-family: var(--font-titulo);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.vn-fecha { font-size: 13px; color: var(--n400); margin: 4px 0 0; }
+.vn-btn-actualizar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--r-md);
+  background: var(--verde);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  transition: background var(--transition);
+}
+.vn-btn-actualizar:hover:not(:disabled) { background: var(--verde-medio); }
+.vn-btn-actualizar:disabled { opacity: 0.7; }
+
+/* ─── Error ───────────────────────────────────────────────────────────────── */
+.vn-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--rojo-bg);
+  border: 1px solid var(--rojo-borde);
+  color: var(--rojo);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* ─── Grids de filas ──────────────────────────────────────────────────────── */
+.vn-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.vn-grafica-planes-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.vn-dos-cols-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ─── Panel genérico ──────────────────────────────────────────────────────── */
+.vn-panel {
+  background: #fff;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--n100);
+  box-shadow: var(--shadow-card);
+  padding: 22px 24px;
+}
+.vn-panel--col { display: flex; flex-direction: column; gap: 24px; }
+.vn-panel__titulo {
+  font-family: var(--font-titulo);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+
+/* ─── Gráfica de crecimiento ─────────────────────────────────────────────── */
+.vn-grafica-titulo { margin: 0 0 22px; }
+.vn-grafica-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  height: 110px;
+}
+.vn-barra-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.vn-barra__valor { font-size: 12px; font-weight: 700; color: var(--n400); }
+.vn-barra__valor--actual { color: var(--verde); }
+.vn-barra {
+  width: 100%;
+  max-width: 36px;
+  height: var(--alto);
+  background: var(--g200);
+  border-radius: 4px 4px 0 0;
+}
+.vn-barra--actual { background: var(--verde); }
+.vn-barra__label { font-size: 10px; color: var(--n300); font-weight: 400; white-space: nowrap; }
+.vn-barra__label--actual { color: var(--verde); font-weight: 700; }
+
+/* ─── Panel cuentas y planes ─────────────────────────────────────────────── */
+.vn-cuentas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.vn-cuentas-pct { font-size: 12px; font-weight: 700; color: var(--verde); }
+.vn-progreso-rail {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--n100);
+  overflow: hidden;
+}
+.vn-progreso-barra {
+  width: var(--pct);
+  height: 100%;
+  background: var(--verde);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.vn-cuentas-totales {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--n500);
+}
+.vn-count-activas   { color: var(--verde); font-weight: 700; }
+.vn-count-inactivas { color: var(--rojo);  font-weight: 700; }
+
+.vn-planes-titulo { margin: 0 0 14px; }
+.vn-sinclientes { font-size: 13px; color: var(--n400); margin: 0; }
+.vn-planes-lista { display: flex; flex-direction: column; gap: 13px; }
+.vn-plan-item {}
+.vn-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+.vn-plan-nombre { font-size: 13px; font-weight: 700; color: var(--negro); }
+.vn-plan-cantidad { font-weight: 400; color: var(--n400); font-size: 11px; margin-left: 6px; }
+.vn-plan-mrr { font-size: 12px; font-weight: 700; color: var(--verde); }
+.vn-plan-rail {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--n100);
+  overflow: hidden;
+}
+.vn-plan-barra {
+  width: var(--pct);
+  height: 100%;
+  background: var(--verde-medio);
+  border-radius: 3px;
+}
+
+/* ─── Clientes recientes ─────────────────────────────────────────────────── */
+.vn-clientes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.vn-btn-ver-todos {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--verde);
+  font-family: var(--font-body);
+}
+.vn-clientes-lista {}
+.vn-cliente-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 6px;
+  cursor: pointer;
+  border-radius: var(--r-md);
+  transition: background var(--transition);
+}
+.vn-cliente-fila:hover { background: var(--gris-fondo); }
+.vn-cliente-fila--borde { border-bottom: 1px solid var(--n50); }
+.vn-cliente-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--verde-claro);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--verde);
+  flex-shrink: 0;
+}
+.vn-cliente-info { flex: 1; min-width: 0; }
+.vn-cliente-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--negro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vn-cliente-plan { font-size: 11px; color: var(--n400); margin-top: 1px; }
+.vn-cliente-badge {
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.vn-cliente-badge--activa   { background: var(--verde-claro); color: var(--verde); }
+.vn-cliente-badge--inactiva { background: var(--rojo-bg);     color: var(--rojo);  }
+
+/* ─── Salud del sistema ──────────────────────────────────────────────────── */
+.vn-salud-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--n50);
+}
+.vn-salud-fila--last { border-bottom: none; }
+.vn-salud-label { font-size: 13px; color: var(--n500); }
+.vn-salud-valor { font-size: 13px; font-weight: 700; }
+.vn-salud-valor--normal { color: var(--negro); }
+.vn-salud-valor--alerta { color: var(--rojo);  }

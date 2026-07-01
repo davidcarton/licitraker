@@ -1,0 +1,95 @@
+/* ── Dashboard Header ────────────────────────────────────────────────────────── */
+
+.dash-header {
+  height: 56px;
+  flex-shrink: 0;
+  background: #1B2B1F;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 clamp(1rem, 3vw, 1.75rem);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.dash-header-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  transition: background var(--transition);
+}
+.dash-header-hamburger:hover { background: rgba(255,255,255,0.16); }
+
+.dash-header__titulo {
+  font-family: var(--font-titulo);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-header__spacer { flex: 1; }
+
+.dash-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.dash-header__notif-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.08);
+  transition: background var(--transition);
+}
+.dash-header__notif-btn:hover { background: rgba(255,255,255,0.16); }
+
+.dash-header__user { display: flex; align-items: center; gap: 8px; }
+
+.dash-header__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--verde-medio);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-titulo);
+  flex-shrink: 0;
+}
+
+.dash-header-empresa {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ─── Media queries ───────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .dash-header-empresa { display: none !important; }
+}
+
+@media (max-width: 640px) {
+  .dash-header-hamburger { display: flex !important; }
+}

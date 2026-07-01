@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import '../styles/pages/Configuracion.css'
 
 const TABS = [
   { id: 'perfil', label: 'Perfil' },
@@ -59,36 +60,12 @@ function soloDigitos(texto) {
   return texto.replace(/\D/g, '')
 }
 
-const inputStyle = {
-  width: '100%',
-  padding: '10px 14px',
-  borderRadius: 'var(--r-md)',
-  border: '1px solid var(--n100)',
-  fontSize: 14,
-  color: 'var(--n900)',
-  background: 'var(--gris-fondo)',
-}
-
 function Card({ title, subtitle, children }) {
   return (
-    <section style={{
-      background: '#fff',
-      borderRadius: 'var(--r-xl)',
-      border: '1px solid var(--n100)',
-      boxShadow: 'var(--shadow-card)',
-      padding: '22px 24px',
-    }}>
-      <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 15, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
-        {title}
-      </h3>
-      {subtitle && (
-        <p style={{ fontSize: 12, color: 'var(--n400)', marginTop: 4, marginBottom: 0 }}>
-          {subtitle}
-        </p>
-      )}
-      <div style={{ marginTop: 18 }}>
-        {children}
-      </div>
+    <section className="cfg-card">
+      <h3 className="cfg-card__titulo">{title}</h3>
+      {subtitle && <p className="cfg-card__subtitulo">{subtitle}</p>}
+      <div className="cfg-card__body">{children}</div>
     </section>
   )
 }
@@ -96,37 +73,16 @@ function Card({ title, subtitle, children }) {
 function Campo({ label, value, onChange, type = 'text' }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={inputStyle}
-      />
+      <label className="cfg-campo-label">{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="cfg-input" />
     </div>
   )
 }
 
 function BotonGuardar({ onClick }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-      <button
-        onClick={onClick}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '12px 28px',
-          borderRadius: 'var(--r-md)',
-          background: 'var(--verde)',
-          color: '#fff',
-          fontSize: 14, fontWeight: 700,
-          fontFamily: 'var(--font-body)',
-          transition: 'background var(--transition)',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--verde-medio)')}
-        onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--verde)')}
-      >
+    <div className="cfg-btn-guardar-wrap">
+      <button onClick={onClick} className="cfg-btn-guardar">
         <Save size={16} />
         Guardar cambios
       </button>
@@ -140,19 +96,9 @@ function Toggle({ checked, onChange }) {
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      style={{
-        width: 44, height: 24, borderRadius: 100, flexShrink: 0,
-        border: 'none', position: 'relative',
-        background: checked ? 'var(--verde)' : 'var(--n100)',
-        transition: 'background var(--transition)',
-      }}
+      className={`cfg-toggle ${checked ? 'cfg-toggle--on' : 'cfg-toggle--off'}`}
     >
-      <span style={{
-        position: 'absolute', top: 3, left: checked ? 23 : 3,
-        width: 18, height: 18, borderRadius: '50%',
-        background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-        transition: 'left var(--transition)',
-      }} />
+      <span className={`cfg-toggle__thumb ${checked ? 'cfg-toggle__thumb--on' : 'cfg-toggle__thumb--off'}`} />
     </button>
   )
 }
@@ -186,80 +132,48 @@ function TabPerfil({ mostrarToast }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="cfg-perfil">
       <Card title="Datos de la empresa" subtitle="Esta información se usa para personalizar tu panel">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="cfg-campos-grid">
           <Campo label="Nombre de la empresa" value={nombre} onChange={setNombre} />
           <Campo label="CIF" value={cif} onChange={setCif} />
           <Campo label="Email de contacto" value={email} onChange={setEmail} type="email" />
           <Campo label="Teléfono" value={telefono} onChange={setTelefono} />
         </div>
-        <div style={{ marginTop: 20 }}>
+        <div className="cfg-campos-mt">
           <BotonGuardar onClick={() => mostrarToast('Datos de la empresa guardados')} />
         </div>
       </Card>
 
       {/* Eliminar cuenta */}
-      <div style={{
-        background: '#fff', borderRadius: 'var(--r-xl)',
-        border: '1px solid var(--rojo-borde)', boxShadow: 'var(--shadow-card)',
-        padding: '22px 24px',
-      }}>
-        <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 15, fontWeight: 700, color: 'var(--rojo)', margin: '0 0 6px' }}>
-          Eliminar cuenta
-        </h3>
-        <p style={{ fontSize: 13, color: 'var(--n500)', margin: '0 0 18px', lineHeight: 1.6 }}>
+      <div className="cfg-card cfg-card--peligro">
+        <h3 className="cfg-card__titulo--rojo">Eliminar cuenta</h3>
+        <p className="cfg-eliminar-desc">
           Elimina permanentemente tu cuenta y todos los datos asociados: usuarios, licitaciones guardadas y resúmenes IA. Esta acción no se puede deshacer.
         </p>
         {!confirmarEliminar ? (
-          <button
-            onClick={() => setConfirmarEliminar(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 20px', borderRadius: 'var(--r-md)',
-              background: 'var(--rojo-bg)', color: 'var(--rojo)',
-              border: '1px solid var(--rojo-borde)',
-              fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: 'pointer',
-            }}
-          >
+          <button onClick={() => setConfirmarEliminar(true)} className="cfg-btn-eliminar">
             <Trash2 size={15} />
             Eliminar mi cuenta
           </button>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--rojo)', margin: 0 }}>
+          <div className="cfg-eliminar-confirmar">
+            <p className="cfg-eliminar-aviso">
               ¿Estás seguro? Esta acción eliminará todos tus datos de forma permanente.
             </p>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div className="cfg-eliminar-acciones">
               <button
                 onClick={() => { setConfirmarEliminar(false); setErrorEliminar('') }}
                 disabled={eliminando}
-                style={{
-                  padding: '9px 18px', borderRadius: 'var(--r-md)',
-                  border: '1px solid var(--n100)', background: '#fff',
-                  color: 'var(--n500)', fontSize: 13, fontWeight: 600,
-                  fontFamily: 'var(--font-body)', cursor: 'pointer',
-                }}
+                className="cfg-btn-cancelar"
               >
                 Cancelar
               </button>
-              <button
-                onClick={eliminarCuenta}
-                disabled={eliminando}
-                style={{
-                  padding: '9px 18px', borderRadius: 'var(--r-md)',
-                  background: 'var(--rojo)', color: '#fff',
-                  border: 'none', fontSize: 13, fontWeight: 700,
-                  fontFamily: 'var(--font-body)', cursor: 'pointer',
-                  opacity: eliminando ? 0.7 : 1,
-                }}
-              >
+              <button onClick={eliminarCuenta} disabled={eliminando} className="cfg-btn-confirmar-rojo">
                 {eliminando ? 'Eliminando...' : 'Sí, eliminar mi cuenta'}
               </button>
             </div>
-            {errorEliminar && (
-              <span style={{ fontSize: 12, color: 'var(--rojo)', fontWeight: 600 }}>{errorEliminar}</span>
-            )}
+            {errorEliminar && <span className="cfg-error-eliminar">{errorEliminar}</span>}
           </div>
         )}
       </div>
@@ -279,42 +193,32 @@ function TabPreferencias({ mostrarToast }) {
   const [plazo, setPlazo] = useState('todos')
   const [notificaciones, setNotificaciones] = useState(NOTIFICACIONES_INICIAL)
 
-  const toggleTipo = (tipo) => {
-    setTiposObra(prev => ({ ...prev, [tipo]: !prev[tipo] }))
-  }
-
-  const toggleProvincia = (provincia) => {
-    setProvinciasActivas(prev => ({ ...prev, [provincia]: !prev[provincia] }))
-  }
-
-  const toggleNotificacion = (id) => {
-    setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, valor: !n.valor } : n))
-  }
+  const toggleTipo = (tipo) => setTiposObra(prev => ({ ...prev, [tipo]: !prev[tipo] }))
+  const toggleProvincia = (provincia) => setProvinciasActivas(prev => ({ ...prev, [provincia]: !prev[provincia] }))
+  const toggleNotificacion = (id) => setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, valor: !n.valor } : n))
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontFamily: 'var(--font-titulo)', fontSize: 18, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
-          Qué te interesa recibir por email
-        </h2>
-        <p style={{ fontSize: 13, color: 'var(--n400)', marginTop: 6, maxWidth: 640 }}>
+      <div className="cfg-pref-cabecera">
+        <h2 className="cfg-pref-titulo">Qué te interesa recibir por email</h2>
+        <p className="cfg-pref-subtitulo">
           Define los criterios de las licitaciones que quieres que LiciTracker te avise por correo,
           y cómo quieres recibir esos avisos.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 24, alignItems: 'start' }}>
-        {/* Columna principal: criterios de contenido */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="cfg-pref-layout">
+        {/* Columna principal */}
+        <div className="cfg-pref-col">
           <Card title="Tipo de obra" subtitle="Selecciona los tipos de licitación que te interesan">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px 16px' }}>
+            <div className="cfg-tipos-grid">
               {TIPOS_OBRA.map(tipo => (
-                <label key={tipo} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--n700)', cursor: 'pointer' }}>
+                <label key={tipo} className="cfg-tipo-label">
                   <input
                     type="checkbox"
                     checked={tiposObra[tipo]}
                     onChange={() => toggleTipo(tipo)}
-                    style={{ width: 16, height: 16, accentColor: '#3D7A4F' }}
+                    className="cfg-tipo-checkbox"
                   />
                   {tipo}
                 </label>
@@ -323,24 +227,14 @@ function TabPreferencias({ mostrarToast }) {
           </Card>
 
           <Card title="Provincias" subtitle="Elige las provincias donde buscar licitaciones">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div className="cfg-provincias-wrap">
               {PROVINCIAS.map(p => {
                 const activa = provinciasActivas[p]
                 return (
                   <button
                     key={p}
                     onClick={() => toggleProvincia(p)}
-                    style={{
-                      padding: '7px 14px',
-                      borderRadius: 100,
-                      fontSize: 12,
-                      fontWeight: 700,
-                      fontFamily: 'var(--font-body)',
-                      border: `1px solid ${activa ? 'var(--verde)' : 'var(--n100)'}`,
-                      background: activa ? 'var(--verde-claro)' : '#fff',
-                      color: activa ? 'var(--verde)' : 'var(--n500)',
-                      transition: 'all var(--transition)',
-                    }}
+                    className={`cfg-provincia-btn ${activa ? 'cfg-provincia-btn--activa' : 'cfg-provincia-btn--inactiva'}`}
                   >
                     {p}
                   </button>
@@ -349,51 +243,47 @@ function TabPreferencias({ mostrarToast }) {
             </div>
           </Card>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+          <div className="cfg-importe-plazos-grid">
             <Card title="Importe de la licitación" subtitle="Rango de presupuesto que te interesa">
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 120 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-                    Desde
-                  </label>
-                  <div style={{ position: 'relative' }}>
+              <div className="cfg-importe-row">
+                <div className="cfg-importe-col">
+                  <label className="cfg-campo-label">Desde</label>
+                  <div className="cfg-importe-input-wrap">
                     <input
                       value={formatMiles(importeDesde)}
                       onChange={(e) => setImporteDesde(soloDigitos(e.target.value))}
-                      style={{ ...inputStyle, paddingRight: 32 }}
+                      className="cfg-input cfg-input--pr"
                       inputMode="numeric"
                     />
-                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--n400)' }}>€</span>
+                    <span className="cfg-importe-euro">€</span>
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 120 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-                    Hasta
-                  </label>
-                  <div style={{ position: 'relative' }}>
+                <div className="cfg-importe-col">
+                  <label className="cfg-campo-label">Hasta</label>
+                  <div className="cfg-importe-input-wrap">
                     <input
                       value={formatMiles(importeHasta)}
                       onChange={(e) => setImporteHasta(soloDigitos(e.target.value))}
-                      style={{ ...inputStyle, paddingRight: 32 }}
+                      className="cfg-input cfg-input--pr"
                       inputMode="numeric"
                     />
-                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--n400)' }}>€</span>
+                    <span className="cfg-importe-euro">€</span>
                   </div>
                 </div>
               </div>
             </Card>
 
             <Card title="Plazo de presentación" subtitle="¿Con cuánta antelación quieres verlas?">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="cfg-plazos">
                 {PLAZOS.map(p => (
-                  <label key={p.value} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--n700)', cursor: 'pointer' }}>
+                  <label key={p.value} className="cfg-plazo-label">
                     <input
                       type="radio"
                       name="plazo"
                       value={p.value}
                       checked={plazo === p.value}
                       onChange={() => setPlazo(p.value)}
-                      style={{ width: 16, height: 16, accentColor: '#3D7A4F' }}
+                      className="cfg-plazo-radio"
                     />
                     {p.label}
                   </label>
@@ -405,21 +295,17 @@ function TabPreferencias({ mostrarToast }) {
           <BotonGuardar onClick={() => mostrarToast('Preferencias guardadas')} />
         </div>
 
-        {/* Columna lateral: forma de aviso */}
+        {/* Columna lateral */}
         <Card title="Notificaciones" subtitle="Cómo quieres que te avisemos">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div className="cfg-notif-lista">
             {notificaciones.map((n, i) => (
               <div
                 key={n.id}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
-                  paddingBottom: i < notificaciones.length - 1 ? 18 : 0,
-                  borderBottom: i < notificaciones.length - 1 ? '1px solid var(--n50)' : 'none',
-                }}
+                className={`cfg-notif-item${i < notificaciones.length - 1 ? ' cfg-notif-item--separado' : ''}`}
               >
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--negro)' }}>{n.label}</div>
-                  <div style={{ fontSize: 12, color: 'var(--n400)', marginTop: 4 }}>{n.descripcion}</div>
+                  <div className="cfg-notif-label">{n.label}</div>
+                  <div className="cfg-notif-desc">{n.descripcion}</div>
                 </div>
                 <Toggle checked={n.valor} onChange={() => toggleNotificacion(n.id)} />
               </div>
@@ -434,49 +320,29 @@ function TabPreferencias({ mostrarToast }) {
 function ConectorCard({ conector, onConectar }) {
   const Icon = conector.icon
   return (
-    <div style={{
-      background: '#fff', border: '1px solid var(--n100)', borderRadius: 'var(--r-lg)',
-      padding: 20, display: 'flex', flexDirection: 'column', gap: 12,
-    }}>
-      <div style={{
-        width: 40, height: 40, borderRadius: 'var(--r-md)',
-        background: `${conector.color}1A`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
+    <div className="cfg-conector-card">
+      <div
+        className="cfg-conector-icon-wrap"
+        style={{ background: `${conector.color}1A` }}
+      >
         <Icon size={20} color={conector.color} />
       </div>
       <div>
-        <div style={{ fontFamily: 'var(--font-titulo)', fontWeight: 700, fontSize: 14, color: 'var(--negro)' }}>
-          {conector.nombre}
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--n400)', marginTop: 4 }}>
-          {conector.descripcion}
-        </div>
+        <div className="cfg-conector-nombre">{conector.nombre}</div>
+        <div className="cfg-conector-desc">{conector.descripcion}</div>
       </div>
 
       {conector.accion === 'proximamente' && (
-        <span style={{
-          alignSelf: 'flex-start', padding: '4px 10px', borderRadius: 100,
-          background: 'var(--n100)', color: 'var(--n400)', fontSize: 11, fontWeight: 700,
-        }}>
-          Próximamente
-        </span>
+        <span className="cfg-badge-proximo">Próximamente</span>
       )}
-
       {conector.accion === 'activo' && (
-        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--verde)' }}>
-          ✓ Activo
-        </span>
+        <span className="cfg-badge-activo">✓ Activo</span>
       )}
-
       {(conector.accion === 'Conectar' || conector.accion === 'Exportar') && (
         <button
           onClick={() => onConectar(conector)}
-          style={{
-            alignSelf: 'flex-start', padding: '7px 16px',
-            borderRadius: 'var(--r-md)', background: conector.color, color: '#fff',
-            fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)',
-          }}
+          className="cfg-btn-conectar"
+          style={{ background: conector.color }}
         >
           {conector.accion}
         </button>
@@ -494,12 +360,7 @@ function ModalConectar({ conector, onCerrar }) {
             key="overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onCerrar}
-            style={{
-              position: 'fixed', inset: 0,
-              background: 'rgba(17,25,23,0.55)',
-              backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)',
-              zIndex: 100,
-            }}
+            className="cfg-modal-overlay"
           />
           <motion.div
             key="panel"
@@ -508,48 +369,25 @@ function ModalConectar({ conector, onCerrar }) {
             exit={{ opacity: 0, scale: 0.96, y: 10 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-              width: 'min(440px, 90vw)', background: '#fff', borderRadius: 'var(--r-xl)',
-              boxShadow: 'var(--shadow-hover)', zIndex: 101, padding: '28px 28px 24px',
-            }}
+            className="cfg-modal"
           >
-            <button
-              onClick={onCerrar}
-              style={{ position: 'absolute', top: 16, right: 16, color: 'var(--n300)' }}
-              aria-label="Cerrar"
-            >
+            <button onClick={onCerrar} className="cfg-modal__cerrar" aria-label="Cerrar">
               <X size={18} />
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 'var(--r-md)',
-                background: `${conector.color}1A`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
+            <div className="cfg-modal__header">
+              <div className="cfg-modal__icon-wrap" style={{ background: `${conector.color}1A` }}>
                 <conector.icon size={20} color={conector.color} />
               </div>
-              <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 16, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
-                Conectar con {conector.nombre}
-              </h3>
+              <h3 className="cfg-modal__titulo">Conectar con {conector.nombre}</h3>
             </div>
 
-            <p style={{ fontSize: 13, color: 'var(--n500)', lineHeight: 1.6, margin: '0 0 20px' }}>
+            <p className="cfg-modal__desc">
               Para conectar LiciTracker con {conector.nombre}, haz clic en el botón de abajo.
               Te pedirá que inicies sesión en {conector.nombre} y aceptes los permisos. Tarda 2 minutos.
             </p>
 
-            <button
-              onClick={onCerrar}
-              style={{
-                width: '100%', padding: '11px', borderRadius: 'var(--r-md)',
-                background: 'var(--verde)', color: '#fff',
-                fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)',
-              }}
-            >
-              Ir a conectar
-            </button>
+            <button onClick={onCerrar} className="cfg-modal__btn">Ir a conectar</button>
           </motion.div>
         </>
       )}
@@ -562,14 +400,12 @@ function TabCRM() {
 
   return (
     <div>
-      <h2 style={{ fontFamily: 'var(--font-titulo)', fontSize: 20, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
-        Conecta tu programa de gestión
-      </h2>
-      <p style={{ fontSize: 13, color: 'var(--n400)', marginTop: 6, marginBottom: 24, maxWidth: 640 }}>
+      <h2 className="cfg-crm-titulo">Conecta tu programa de gestión</h2>
+      <p className="cfg-crm-subtitulo">
         Si ya usas un programa, conéctalo aquí en 2 minutos. Si no tienes ninguno, LiciTracker ya incluye su propio panel.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+      <div className="cfg-crm-grid">
         {CONECTORES.map(c => (
           <ConectorCard key={c.nombre} conector={c} onConectar={setConector} />
         ))}
@@ -597,18 +433,12 @@ export default function Configuracion() {
 
   return (
     <DashboardLayout title="Configuración">
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--n100)', marginBottom: 24 }}>
+      <div className="cfg-tabs">
         {TABS.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{
-              padding: '12px 20px', marginBottom: -1,
-              fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)',
-              color: tab === t.id ? 'var(--negro)' : 'var(--n400)',
-              borderBottom: `2px solid ${tab === t.id ? 'var(--verde)' : 'transparent'}`,
-              transition: 'color var(--transition), border-color var(--transition)',
-            }}
+            className={`cfg-tab${tab === t.id ? ' cfg-tab--activo' : ''}`}
           >
             {t.label}
           </button>
@@ -625,16 +455,7 @@ export default function Configuracion() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            style={{
-              position: 'fixed', bottom: 24, right: 24,
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'var(--negro)', color: '#fff',
-              padding: '12px 20px',
-              borderRadius: 'var(--r-md)',
-              fontSize: 13, fontWeight: 600,
-              boxShadow: 'var(--shadow-hover)',
-              zIndex: 100,
-            }}
+            className="cfg-toast"
           >
             <CheckCircle size={16} color="var(--g500)" />
             {toast}

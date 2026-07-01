@@ -1,0 +1,24 @@
+/* ── BlueprintFrame ──────────────────────────────────────────────────────────── */
+
+.blueprint-frame {
+  position: relative;
+  width: var(--bf-size);
+  height: var(--bf-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.blueprint-frame__svg {
+  position: absolute;
+  inset: 0;
+}
+
+.blueprint-frame__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

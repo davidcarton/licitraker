@@ -1,0 +1,99 @@
+/* ── Licitaciones ────────────────────────────────────────────────────────────── */
+
+/* ─── Barra de búsqueda CPV ──────────────────────────────────────────────── */
+.lic-barra-cpv {
+  background: #fff;
+  border-bottom: 1px solid var(--n100);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 12px clamp(1.25rem, 4vw, 2.5rem);
+}
+.lic-barra-cpv__inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.lic-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+.lic-input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--n300);
+  pointer-events: none;
+}
+.lic-input {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  border: 1.5px solid var(--n100);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  background: var(--n50);
+  color: var(--n900);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+.lic-input:focus {
+  border-color: var(--g500);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--g100);
+}
+.lic-btn-buscar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--g700);
+  color: #fff;
+  border-radius: var(--r-md);
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  transition: background var(--transition), transform var(--transition);
+}
+.lic-btn-buscar:hover:not(:disabled) {
+  background: var(--g800);
+  transform: translateY(-1px);
+}
+.lic-btn-buscar:disabled { opacity: 0.7; }
+
+/* ─── Grid de tarjetas ────────────────────────────────────────────────────── */
+.lic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+.lic-tarjeta-wrap { width: 100%; max-width: 380px; }
+
+/* ─── Banner de error ─────────────────────────────────────────────────────── */
+.lic-error {
+  background: var(--rojo-bg);
+  border: 1px solid var(--rojo-borde);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lic-error__text { font-size: 13px; color: var(--rojo); font-weight: 500; }
+
+/* ─── Estado vacío ────────────────────────────────────────────────────────── */
+.lic-vacio {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.lic-vacio__titulo { font-family: var(--font-titulo); font-size: 16px; font-weight: 700; color: var(--n500); }
+.lic-vacio__sub    { font-size: 13px; color: var(--n300); }
+
+/* ─── Contador CPV ────────────────────────────────────────────────────────── */
+.lic-cpv-count { font-size: 13px; color: var(--n500); font-weight: 600; margin-bottom: 16px; }

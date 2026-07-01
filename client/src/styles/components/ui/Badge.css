@@ -1,0 +1,20 @@
+/* ── Badge (plazo) ───────────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 100px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.badge--urgente  { background: var(--rojo-bg);  color: var(--rojo);  border-color: var(--rojo-borde);  }
+.badge--proximo  { background: var(--ambar-bg); color: var(--ambar); border-color: var(--ambar-borde); }
+.badge--enplazo  { background: var(--g50);      color: var(--g700);  border-color: var(--g200);        }
+.badge--sinplazo { background: var(--n50);      color: var(--n500);  border-color: var(--n100);        }

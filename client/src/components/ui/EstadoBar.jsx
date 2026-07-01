@@ -1,4 +1,5 @@
 import { Building2, RefreshCw, Clock } from 'lucide-react'
+import '../../styles/components/ui/EstadoBar.css'
 
 function fmtHora(iso) {
   if (!iso) return '—'
@@ -9,38 +10,20 @@ function fmtHora(iso) {
 
 export default function EstadoBar({ total, actualizacion, proximaActualizacion }) {
   return (
-    <div style={{
-      backgroundColor: 'var(--g800)',
-      backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 7px, transparent 7px, transparent 22px)',
-      padding: '8px clamp(1.25rem, 4vw, 2.5rem)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      flexWrap: 'wrap',
-      gap: 8,
-      position: 'sticky',
-      top: '58px',
-      zIndex: 49,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className="estado-bar">
+      <div className="estado-bar__item">
         <Building2 size={14} color="#7FC99A" />
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
-          {total} licitaciones de construcción en plazo
-        </span>
+        <span className="estado-bar__total">{total} licitaciones de construcción en plazo</span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="estado-bar__item">
         <RefreshCw size={13} color="rgba(255,255,255,0.35)" />
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)' }}>
-          Actualizado hoy a las {fmtHora(actualizacion)}
-        </span>
+        <span className="estado-bar__meta">Actualizado hoy a las {fmtHora(actualizacion)}</span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="estado-bar__item">
         <Clock size={13} color="rgba(255,255,255,0.35)" />
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)' }}>
-          Próxima actualización: {fmtHora(proximaActualizacion)}
-        </span>
+        <span className="estado-bar__meta">Próxima actualización: {fmtHora(proximaActualizacion)}</span>
       </div>
     </div>
   )

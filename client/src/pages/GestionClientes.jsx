@@ -4,15 +4,11 @@ import { AlertCircle, RefreshCw, ArrowLeft, Mail, Building2, KeyRound, ChevronDo
 import DashboardLayout from '../components/dashboard/DashboardLayout.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { formatImporte, formatFecha } from '../utils/format.js'
+import '../styles/pages/GestionClientes.css'
 
 function BadgeEstado({ activa }) {
   return (
-    <span style={{
-      padding: '3px 10px', borderRadius: 100,
-      background: activa ? 'var(--verde-claro)' : 'var(--rojo-bg)',
-      color: activa ? 'var(--verde)' : 'var(--rojo)',
-      fontSize: 11, fontWeight: 700,
-    }}>
+    <span className={`gc-badge-estado ${activa ? 'gc-badge-estado--activa' : 'gc-badge-estado--inactiva'}`}>
       {activa ? 'Activa' : 'Inactiva'}
     </span>
   )
@@ -31,8 +27,8 @@ function FilaDato({ label, valor }) {
   if (!valor) return null
   return (
     <div>
-      <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{label}</span>
-      <span style={{ fontSize: 13, color: 'var(--negro)' }}>{valor}</span>
+      <span className="gc-fila-dato__label">{label}</span>
+      <span className="gc-fila-dato__valor">{valor}</span>
     </div>
   )
 }
@@ -66,32 +62,32 @@ function ResetPasswordRow({ authFetch, clienteId, usuarioId }) {
   }
 
   return (
-    <div style={{ marginTop: 6 }}>
+    <div className="gc-reset-row">
       <button
         onClick={() => { setAbierto(a => !a); setMsg(''); setPassword('') }}
-        style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--n400)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)' }}
+        className="gc-reset-btn"
       >
         <KeyRound size={12} />
         Restablecer contraseña
         {abierto ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
       </button>
       {abierto && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+        <div className="gc-reset-form">
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Nueva contraseña (mín. 8 caracteres)"
-            style={{ flex: 1, padding: '7px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--n100)', fontSize: 12, background: '#fff', fontFamily: 'var(--font-body)', boxSizing: 'border-box' }}
+            className="gc-reset-input"
           />
-          <button
-            onClick={resetear}
-            disabled={guardando}
-            style={{ padding: '7px 14px', borderRadius: 'var(--r-md)', background: 'var(--verde)', color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', opacity: guardando ? 0.7 : 1, whiteSpace: 'nowrap' }}
-          >
+          <button onClick={resetear} disabled={guardando} className="gc-reset-submit">
             {guardando ? 'Guardando...' : 'Confirmar'}
           </button>
-          {msg && <span style={{ fontSize: 12, fontWeight: 600, color: msg.includes('actualizada') ? 'var(--verde)' : 'var(--rojo)' }}>{msg}</span>}
+          {msg && (
+            <span className={`gc-reset-msg ${msg.includes('actualizada') ? 'gc-reset-msg--ok' : 'gc-reset-msg--error'}`}>
+              {msg}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -100,50 +96,21 @@ function ResetPasswordRow({ authFetch, clienteId, usuarioId }) {
 
 function ModalEliminarCliente({ nombre, eliminando, onConfirm, onCancel }) {
   return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
-    }}>
-      <div style={{
-        background: '#fff', borderRadius: 'var(--r-xl)', padding: '28px 32px',
-        maxWidth: 440, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+    <div className="gc-modal-overlay">
+      <div className="gc-modal">
+        <div className="gc-modal__header">
           <Trash2 size={20} color="var(--rojo)" />
-          <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 16, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>
-            Eliminar cliente
-          </h3>
+          <h3 className="gc-modal__titulo">Eliminar cliente</h3>
         </div>
-        <p style={{ fontSize: 13, color: 'var(--n500)', lineHeight: 1.6, marginBottom: 8 }}>
-          ¿Seguro que quieres eliminar a <strong style={{ color: 'var(--negro)' }}>"{nombre}"</strong>?
+        <p className="gc-modal__desc">
+          ¿Seguro que quieres eliminar a <strong className="gc-modal__strong">"{nombre}"</strong>?
         </p>
-        <p style={{ fontSize: 12, color: 'var(--rojo)', lineHeight: 1.6, marginBottom: 24 }}>
+        <p className="gc-modal__aviso">
           Se borrarán todos sus usuarios, licitaciones guardadas y resúmenes IA. Esta acción no se puede deshacer.
         </p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button
-            onClick={onCancel}
-            disabled={eliminando}
-            style={{
-              padding: '9px 18px', borderRadius: 'var(--r-md)',
-              border: '1px solid var(--n100)', background: '#fff',
-              color: 'var(--n500)', fontSize: 13, fontWeight: 600,
-              fontFamily: 'var(--font-body)', cursor: 'pointer',
-            }}
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={eliminando}
-            style={{
-              padding: '9px 18px', borderRadius: 'var(--r-md)',
-              background: 'var(--rojo)', color: '#fff',
-              border: 'none', fontSize: 13, fontWeight: 700,
-              fontFamily: 'var(--font-body)', cursor: 'pointer',
-              opacity: eliminando ? 0.7 : 1,
-            }}
-          >
+        <div className="gc-modal__actions">
+          <button onClick={onCancel} disabled={eliminando} className="gc-btn-cancelar">Cancelar</button>
+          <button onClick={onConfirm} disabled={eliminando} className="gc-btn-confirmar">
             {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
           </button>
         </div>
@@ -266,12 +233,9 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button
-          onClick={onVolver}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: 'var(--n500)', fontFamily: 'var(--font-body)' }}
-        >
+    <div className="gc-detalle">
+      <div className="gc-detalle__nav">
+        <button onClick={onVolver} className="gc-btn-volver">
           <ArrowLeft size={16} />
           Volver a la lista
         </button>
@@ -279,21 +243,21 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
       </div>
 
       {detalle && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 'var(--r-md)', background: 'var(--verde-claro)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div className="gc-empresa-header">
+          <div className="gc-empresa-avatar">
             <Building2 size={22} color="var(--verde)" />
           </div>
           <div>
-            <h2 style={{ fontFamily: 'var(--font-titulo)', fontSize: 20, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>{detalle.nombre}</h2>
-            <span style={{ fontSize: 12, color: 'var(--n400)' }}>Alta: {formatFecha(detalle.createdAt) || '—'}</span>
+            <h2 className="gc-empresa-nombre">{detalle.nombre}</h2>
+            <span className="gc-empresa-alta">Alta: {formatFecha(detalle.createdAt) || '—'}</span>
           </div>
         </div>
       )}
 
-      {cargando && <p style={{ fontSize: 13, color: 'var(--n400)' }}>Cargando...</p>}
+      {cargando && <p className="gc-cargando">Cargando...</p>}
 
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--rojo-bg)', border: '1px solid var(--rojo-borde)', color: 'var(--rojo)', borderRadius: 'var(--r-md)', padding: '12px 16px', fontSize: 13, fontWeight: 600 }}>
+        <div className="gc-error-banner">
           <AlertCircle size={16} />
           {error}
         </div>
@@ -302,11 +266,10 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
       {detalle && (
         <>
           {/* Cuenta */}
-          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>Cuenta</h3>
+          <div className="gc-card">
+            <h3 className="gc-card__titulo">Cuenta</h3>
 
-            {/* Datos de la empresa */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px 24px', padding: '16px', background: 'var(--gris-fondo)', borderRadius: 'var(--r-md)' }}>
+            <div className="gc-datos-grid">
               <FilaDato label="Nombre empresa" valor={detalle.nombre} />
               <FilaDato label="CIF" valor={detalle.cif} />
               <FilaDato label="Dirección" valor={detalle.direccion} />
@@ -314,61 +277,55 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
               <FilaDato label="Teléfono" valor={detalle.telefono} />
             </div>
 
-            {/* Plan y estado */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'end' }}>
+            <div className="gc-plan-grid">
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Plan</label>
+                <label className="gc-campo-label">Plan</label>
                 <input
                   type="text"
                   value={plan}
                   maxLength={50}
                   onChange={(e) => setPlan(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--n100)', fontSize: 14, background: 'var(--gris-fondo)', fontFamily: 'var(--font-body)', boxSizing: 'border-box' }}
+                  className="gc-input"
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Estado</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 12, color: 'var(--n500)', whiteSpace: 'nowrap' }}>{activa ? 'Activa' : 'Inactiva'}</span>
+              <div className="gc-estado-col">
+                <span className="gc-estado-label">Estado</span>
+                <div className="gc-estado-row">
+                  <span className="gc-estado-text">{activa ? 'Activa' : 'Inactiva'}</span>
                   <button
                     onClick={() => setActiva(a => !a)}
-                    style={{ width: 44, height: 24, borderRadius: 100, background: activa ? 'var(--verde)' : 'var(--n100)', position: 'relative', transition: 'background var(--transition)', flexShrink: 0 }}
+                    className={`gc-toggle ${activa ? 'gc-toggle--on' : 'gc-toggle--off'}`}
                   >
-                    <span style={{ position: 'absolute', top: 3, left: activa ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left var(--transition)' }} />
+                    <span className={`gc-toggle__thumb ${activa ? 'gc-toggle__thumb--on' : 'gc-toggle__thumb--off'}`} />
                   </button>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button
-                onClick={guardar}
-                disabled={guardando}
-                style={{ padding: '10px 20px', borderRadius: 'var(--r-md)', background: 'var(--verde)', color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', opacity: guardando ? 0.7 : 1 }}
-              >
+            <div className="gc-acciones-row">
+              <button onClick={guardar} disabled={guardando} className="gc-btn-guardar">
                 {guardando ? 'Guardando...' : 'Guardar cambios'}
               </button>
-              {mensajeGuardado && <span style={{ fontSize: 13, color: 'var(--verde)', fontWeight: 600 }}>{mensajeGuardado}</span>}
+              {mensajeGuardado && <span className="gc-msg-guardado">{mensajeGuardado}</span>}
             </div>
 
             {/* Usuarios de la empresa */}
-            <div style={{ borderTop: '1px solid var(--n100)', paddingTop: 16 }}>
-              <h4 style={{ fontFamily: 'var(--font-titulo)', fontSize: 13, fontWeight: 700, color: 'var(--negro)', margin: '0 0 12px' }}>
-                Usuarios ({detalle.usuarios.length})
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="gc-usuarios-seccion">
+              <h4 className="gc-usuarios-titulo">Usuarios ({detalle.usuarios.length})</h4>
+              <div className="gc-usuarios-lista">
                 {detalle.usuarios.map(u => (
-                  <div key={u.id} style={{ padding: '12px 14px', borderRadius: 'var(--r-md)', background: 'var(--gris-fondo)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--verde-claro)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--verde)', flexShrink: 0 }}>
-                        {iniciales(u.nombre)}
+                  <div key={u.id} className="gc-usuario-fila">
+                    <div className="gc-usuario-inner">
+                      <div className="gc-usuario-avatar">{iniciales(u.nombre)}</div>
+                      <div className="gc-usuario-datos">
+                        <div className="gc-usuario-nombre">{u.nombre}</div>
+                        <div className="gc-usuario-email">{u.email}</div>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--negro)' }}>{u.nombre}</div>
-                        <div style={{ fontSize: 12, color: 'var(--n400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n400)', background: 'var(--n100)', padding: '3px 10px', borderRadius: 100, whiteSpace: 'nowrap' }}>{u.rol}</span>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: u.activo ? 'var(--verde)' : 'var(--rojo)', flexShrink: 0 }} title={u.activo ? 'Activo' : 'Inactivo'} />
+                      <span className="gc-usuario-rol">{u.rol}</span>
+                      <span
+                        className={`gc-usuario-dot ${u.activo ? 'gc-usuario-dot--activo' : 'gc-usuario-dot--inactivo'}`}
+                        title={u.activo ? 'Activo' : 'Inactivo'}
+                      />
                     </div>
                     <ResetPasswordRow authFetch={authFetch} clienteId={clienteId} usuarioId={u.id} />
                   </div>
@@ -378,30 +335,30 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
           </div>
 
           {/* Preferencias */}
-          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>Preferencias configuradas</h3>
+          <div className="gc-card gc-card--gap12">
+            <h3 className="gc-card__titulo">Preferencias configuradas</h3>
             {!detalle.preferencias ? (
-              <p style={{ fontSize: 13, color: 'var(--n400)', margin: 0 }}>Sin preferencias configuradas todavía.</p>
+              <p className="gc-pref-sin-datos">Sin preferencias configuradas todavía.</p>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', fontSize: 13 }}>
+              <div className="gc-pref-grid">
                 <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tipos de obra</span>
+                  <span className="gc-pref-label">Tipos de obra</span>
                   {(detalle.preferencias.tiposObra || []).join(', ') || '—'}
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Provincias</span>
+                  <span className="gc-pref-label">Provincias</span>
                   {(detalle.preferencias.provincias || []).join(', ') || '—'}
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Importe mínimo</span>
+                  <span className="gc-pref-label">Importe mínimo</span>
                   {detalle.preferencias.importeMin != null ? `${formatImporte(detalle.preferencias.importeMin)} €` : '—'}
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Importe máximo</span>
+                  <span className="gc-pref-label">Importe máximo</span>
                   {detalle.preferencias.importeMax != null ? `${formatImporte(detalle.preferencias.importeMax)} €` : '—'}
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Frecuencia de alerta</span>
+                  <span className="gc-pref-label">Frecuencia de alerta</span>
                   {detalle.preferencias.frecuenciaAlerta || '—'}
                 </div>
               </div>
@@ -409,61 +366,49 @@ function DetalleCliente({ clienteId, onVolver, onGuardado }) {
           </div>
 
           {/* Email */}
-          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--negro)', margin: 0 }}>Enviar email al cliente</h3>
+          <div className="gc-card gc-email-card">
+            <h3 className="gc-card__titulo">Enviar email al cliente</h3>
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Asunto</label>
+              <label className="gc-email-form-label">Asunto</label>
               <input
                 type="text"
                 value={asunto}
                 onChange={(e) => setAsunto(e.target.value)}
                 placeholder="Asunto del email"
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--n100)', fontSize: 14, background: 'var(--gris-fondo)', fontFamily: 'var(--font-body)', boxSizing: 'border-box' }}
+                className="gc-input"
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Mensaje</label>
+              <label className="gc-email-form-label">Mensaje</label>
               <textarea
                 value={cuerpo}
                 onChange={(e) => setCuerpo(e.target.value)}
                 placeholder="Escribe aquí el mensaje para el cliente..."
                 rows={5}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--n100)', fontSize: 14, background: 'var(--gris-fondo)', fontFamily: 'var(--font-body)', resize: 'vertical', boxSizing: 'border-box' }}
+                className="gc-textarea"
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button
-                onClick={enviarEmail}
-                disabled={enviando}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 'var(--r-md)', background: 'var(--verde)', color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', opacity: enviando ? 0.7 : 1 }}
-              >
+            <div className="gc-email-row">
+              <button onClick={enviarEmail} disabled={enviando} className="gc-btn-email">
                 <Mail size={15} />
                 {enviando ? 'Enviando...' : 'Enviar email'}
               </button>
               {mensajeEmail && (
-                <span style={{ fontSize: 13, fontWeight: 600, color: mensajeEmail.includes('correctamente') ? 'var(--verde)' : 'var(--rojo)' }}>
+                <span className={`gc-email-msg ${mensajeEmail.includes('correctamente') ? 'gc-email-msg--ok' : 'gc-email-msg--error'}`}>
                   {mensajeEmail}
                 </span>
               )}
             </div>
           </div>
+
           {/* Eliminar cliente */}
-          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--rojo-borde)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h3 style={{ fontFamily: 'var(--font-titulo)', fontSize: 14, fontWeight: 700, color: 'var(--rojo)', margin: 0 }}>Eliminar cliente</h3>
-            <p style={{ fontSize: 13, color: 'var(--n500)', margin: 0, lineHeight: 1.6 }}>
+          <div className="gc-card gc-card--peligro">
+            <h3 className="gc-card__titulo gc-card__titulo--rojo">Eliminar cliente</h3>
+            <p className="gc-eliminar-desc">
               Elimina permanentemente esta empresa y todos sus datos: usuarios, licitaciones guardadas y resúmenes IA.
             </p>
             <div>
-              <button
-                onClick={() => setConfirmarEliminar(true)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '10px 20px', borderRadius: 'var(--r-md)',
-                  background: 'var(--rojo-bg)', color: 'var(--rojo)',
-                  border: '1px solid var(--rojo-borde)',
-                  fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', cursor: 'pointer',
-                }}
-              >
+              <button onClick={() => setConfirmarEliminar(true)} className="gc-btn-eliminar-trigger">
                 <Trash2 size={15} />
                 Eliminar cliente
               </button>
@@ -531,70 +476,46 @@ export default function GestionClientes() {
         />
       ) : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
-            <button
-              onClick={cargar}
-              disabled={cargando}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '10px 18px', borderRadius: 'var(--r-md)',
-                background: 'var(--verde)', color: '#fff',
-                fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)',
-                opacity: cargando ? 0.7 : 1,
-                transition: 'background var(--transition), opacity var(--transition)',
-              }}
-              onMouseEnter={(e) => !cargando && (e.currentTarget.style.background = 'var(--verde-medio)')}
-              onMouseLeave={(e) => !cargando && (e.currentTarget.style.background = 'var(--verde)')}
-            >
-              <RefreshCw size={15} style={{ animation: cargando ? 'spin 0.8s linear infinite' : 'none' }} />
+          <div className="gc-lista-header">
+            <button onClick={cargar} disabled={cargando} className="gc-btn-actualizar">
+              <RefreshCw size={15} className={cargando ? 'spin-icon' : ''} />
               Actualizar
             </button>
           </div>
 
           {error && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              background: 'var(--rojo-bg)', border: '1px solid var(--rojo-borde)', color: 'var(--rojo)',
-              borderRadius: 'var(--r-md)', padding: '12px 16px', fontSize: 13, fontWeight: 600,
-              marginBottom: 20,
-            }}>
+            <div className="gc-error-banner gc-error-banner--mb">
               <AlertCircle size={16} />
               {error}
             </div>
           )}
 
-          <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', border: '1px solid var(--n100)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <div className="gc-tabla-wrap">
+            <table className="gc-tabla">
               <thead>
-                <tr style={{ background: 'var(--gris-fondo)' }}>
+                <tr>
                   {['Nombre', 'Plan', 'Precio', 'Estado', 'Fecha de alta'].map(col => (
-                    <th key={col} style={{ textAlign: 'left', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: 'var(--n400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      {col}
-                    </th>
+                    <th key={col}>{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {clientes.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--n400)', fontSize: 13 }}>
-                      No hay clientes registrados todavía.
-                    </td>
+                  <tr className="gc-tabla__fila-vacia">
+                    <td colSpan={5}>No hay clientes registrados todavía.</td>
                   </tr>
                 ) : (
                   clientes.map(c => (
                     <tr
                       key={c.id}
                       onClick={() => setClienteSeleccionado(c.id)}
-                      style={{ borderTop: '1px solid var(--n100)', cursor: 'pointer' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--gris-fondo)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                      className="gc-tabla__fila"
                     >
-                      <td style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--negro)' }}>{c.nombre}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--n500)' }}>{c.plan}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--n500)' }}>{c.precioMensual != null ? `${formatImporte(c.precioMensual)} €` : '—'}</td>
-                      <td style={{ padding: '12px 16px' }}><BadgeEstado activa={c.activa} /></td>
-                      <td style={{ padding: '12px 16px', color: 'var(--n500)' }}>{formatFecha(c.createdAt) || '—'}</td>
+                      <td className="gc-tabla__td--nombre">{c.nombre}</td>
+                      <td className="gc-tabla__td--gris">{c.plan}</td>
+                      <td className="gc-tabla__td--gris">{c.precioMensual != null ? `${formatImporte(c.precioMensual)} €` : '—'}</td>
+                      <td><BadgeEstado activa={c.activa} /></td>
+                      <td className="gc-tabla__td--gris">{formatFecha(c.createdAt) || '—'}</td>
                     </tr>
                   ))
                 )}

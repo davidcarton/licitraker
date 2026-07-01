@@ -44,14 +44,8 @@ export default function Registro() {
     <AuthLayout titulo="Crea tu cuenta" subtitulo="Empieza a seguir licitaciones de obra pública en minutos">
       <form onSubmit={handleSubmit}>
         {error && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 14px', marginBottom: 16,
-            borderRadius: 'var(--r-md)',
-            background: 'var(--rojo-bg)', border: '1px solid var(--rojo-borde)',
-            color: 'var(--rojo)', fontSize: 13, fontFamily: 'var(--font-body)',
-          }}>
-            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+          <div className="auth-error">
+            <AlertCircle size={16} className="auth-error__icon" />
             {error}
           </div>
         )}
@@ -131,7 +125,7 @@ export default function Registro() {
         </button>
       </form>
 
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--n500)', marginTop: 24, textAlign: 'center' }}>
+      <p className="auth-form-footer">
         ¿Ya tienes cuenta?{' '}
         <Link className="auth-link" to="/login">Inicia sesión</Link>
       </p>

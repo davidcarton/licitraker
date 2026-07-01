@@ -1,0 +1,209 @@
+/* ── MisResumenes ────────────────────────────────────────────────────────────── */
+
+/* ─── Cabecera ────────────────────────────────────────────────────────────── */
+.mr-cabecera { margin-bottom: 24px; }
+.mr-titulo {
+  font-family: var(--font-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.mr-subtitulo { font-size: 13px; color: var(--n400); margin-top: 4px; }
+
+/* ─── Estado cargando / vacío ────────────────────────────────────────────── */
+.mr-spinner-wrap { display: flex; align-items: center; gap: 12px; padding: 32px; }
+.mr-spinner {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid var(--n100);
+  border-top-color: var(--verde);
+  animation: spin 0.8s linear infinite;
+}
+.mr-spinner-text { font-size: 13px; color: var(--n400); }
+.mr-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 260px;
+  text-align: center;
+}
+.mr-vacio__texto { font-size: 14px; color: var(--n400); margin: 0; }
+.mr-btn-ir {
+  padding: 10px 20px;
+  border-radius: var(--r-md);
+  background: var(--verde);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+}
+
+/* ─── Lista de resúmenes ─────────────────────────────────────────────────── */
+.mr-lista { display: flex; flex-direction: column; gap: 10px; }
+
+/* ─── Tarjeta de resumen ─────────────────────────────────────────────────── */
+.mr-tarjeta {
+  background: #fff;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--n100);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.mr-tarjeta--abierta { border-color: #3D7A4F; }
+
+/* ─── Cabecera de la tarjeta ────────────────────────────────────────────── */
+.mr-tarjeta__header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.mr-tarjeta__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-md);
+  background: #EAF4EE;
+  color: #3D7A4F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.mr-tarjeta__icon--abierto { background: #3D7A4F; color: #fff; }
+.mr-tarjeta__info { flex: 1; min-width: 0; }
+.mr-tarjeta__titulo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.mr-tarjeta__titulo {
+  font-family: var(--font-titulo);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--negro);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mr-tarjeta__sin-titulo { color: var(--n400); font-weight: 400; }
+.mr-empresa-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  background: #F3F4F6;
+  padding: 2px 6px;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.mr-tarjeta__meta { display: flex; gap: 14px; margin-top: 4px; flex-wrap: wrap; }
+.mr-tarjeta__meta-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--n400); }
+.mr-tarjeta__meta-item--tenue { color: var(--n300); }
+
+/* ─── Acciones de la tarjeta ─────────────────────────────────────────────── */
+.mr-tarjeta__acciones { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mr-coste-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3D7A4F;
+  background: #EAF4EE;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-family: var(--font-body);
+}
+.mr-tarjeta__fecha { font-size: 11px; color: var(--n300); }
+.mr-btn-eliminar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--rojo-borde);
+  background: var(--rojo-bg);
+  color: var(--rojo);
+}
+.mr-btn-ver {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--r-md);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  transition: background 0.15s;
+}
+.mr-btn-ver--cerrado { background: var(--verde); color: #fff; border: none; }
+.mr-btn-ver--abierto { background: var(--verde-claro); color: var(--verde); border: 1px solid var(--g200); }
+
+/* ─── Cuerpo expandible ──────────────────────────────────────────────────── */
+.mr-tarjeta__cuerpo {
+  border-top: 1px solid #C9E2D2;
+  padding: 20px 24px;
+  background: #FAFDFB;
+}
+.mr-tarjeta__pie { margin-top: 16px; display: flex; justify-content: flex-end; }
+.mr-btn-cerrar {
+  padding: 7px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--n100);
+  background: #fff;
+  color: var(--n500);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+
+/* ─── Modal de confirmación ───────────────────────────────────────────────── */
+.mr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.mr-modal {
+  background: #fff;
+  border-radius: var(--r-xl);
+  padding: 28px 32px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+.mr-modal__header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.mr-modal__titulo {
+  font-family: var(--font-titulo);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.mr-modal__desc { font-size: 13px; color: var(--n500); line-height: 1.6; margin-bottom: 24px; }
+.mr-modal__strong { color: var(--negro); }
+.mr-modal__acciones { display: flex; gap: 10px; justify-content: flex-end; }
+.mr-btn-cancelar {
+  padding: 9px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--n100);
+  background: #fff;
+  color: var(--n500);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+.mr-btn-confirmar {
+  padding: 9px 18px;
+  border-radius: var(--r-md);
+  background: var(--rojo);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+}

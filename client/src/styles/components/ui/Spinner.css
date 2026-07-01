@@ -1,0 +1,39 @@
+/* ── Spinner (página de carga) ───────────────────────────────────────────────── */
+
+.spinner-page {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.spinner-page__ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid var(--g100);
+  border-top-color: var(--g700);
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner-page__texto {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spinner-page__titulo {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--n700);
+}
+
+.spinner-page__sub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--n300);
+}

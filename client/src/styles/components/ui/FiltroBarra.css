@@ -1,0 +1,82 @@
+/* ── FiltroBarra ─────────────────────────────────────────────────────────────── */
+
+.filtro-barra {
+  background: #fff;
+  border-bottom: 1px solid var(--n100);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 12px clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.filtro-barra__inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ─── FilterWrapper (posición relativa con icono + chevron) ───────────────── */
+.filtro-barra__wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.filtro-barra__icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--n300);
+  pointer-events: none;
+  display: flex;
+}
+.filtro-barra__chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--n300);
+  pointer-events: none;
+}
+
+/* ─── Select base ─────────────────────────────────────────────────────────── */
+.filtro-barra__select {
+  width: 100%;
+  min-width: 200px;
+  padding: 9px 30px 9px 34px;
+  border: 1.5px solid var(--n100);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  background: var(--n50);
+  color: var(--n900);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.filtro-barra__select:focus {
+  border-color: var(--g500);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--g100);
+  outline: none;
+}
+
+/* ─── Botón actualizar ────────────────────────────────────────────────────── */
+.filtro-barra__btn-actualizar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--g700);
+  color: #fff;
+  border-radius: var(--r-md);
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background var(--transition), transform var(--transition);
+  white-space: nowrap;
+}
+.filtro-barra__btn-actualizar:hover {
+  background: var(--g800);
+  transform: translateY(-1px);
+}

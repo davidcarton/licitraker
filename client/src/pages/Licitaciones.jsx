@@ -10,71 +10,24 @@ import Spinner from '../components/ui/Spinner.jsx'
 import BlueprintFrame from '../components/ui/BlueprintFrame.jsx'
 import { tipoBadge } from '../utils/format.js'
 import { useApp } from '../context/AppContext.jsx'
-
-const inputBase = {
-  width: '100%',
-  padding: '9px 12px 9px 34px',
-  border: '1.5px solid var(--n100)',
-  borderRadius: 'var(--r-md)',
-  fontSize: 13,
-  background: 'var(--n50)',
-  color: 'var(--n900)',
-  transition: 'border-color var(--transition), box-shadow var(--transition), background var(--transition)',
-}
+import '../styles/pages/Licitaciones.css'
 
 function BarraBusquedaCPV({ valor, onChange, onBuscar, cargando }) {
-  const [focused, setFocused] = useState(false)
-
   return (
-    <div style={{
-      background: '#fff',
-      borderBottom: '1px solid var(--n100)',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-      padding: '12px clamp(1.25rem, 4vw, 2.5rem)',
-    }}>
-      <div style={{
-        maxWidth: 1300,
-        margin: '0 auto',
-        display: 'flex',
-        gap: 10,
-        flexWrap: 'wrap',
-        alignItems: 'center',
-      }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 240 }}>
-          <Hash size={15} style={{
-            position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-            color: 'var(--n300)', pointerEvents: 'none',
-          }} />
+    <div className="lic-barra-cpv">
+      <div className="lic-barra-cpv__inner">
+        <div className="lic-input-wrap">
+          <Hash size={15} className="lic-input-icon" />
           <input
             type="text"
             value={valor}
             placeholder="Buscar por código CPV (ej: 45233141)"
             onChange={e => onChange(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') onBuscar() }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            style={{
-              ...inputBase,
-              ...(focused ? { borderColor: 'var(--g500)', background: '#fff', boxShadow: '0 0 0 3px var(--g100)' } : {}),
-            }}
+            className="lic-input"
           />
         </div>
-
-        <button
-          onClick={onBuscar}
-          disabled={cargando}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            background: 'var(--g700)', color: '#fff',
-            borderRadius: 'var(--r-md)', padding: '9px 18px',
-            fontSize: 13, fontWeight: 600,
-            transition: 'background var(--transition), transform var(--transition)',
-            whiteSpace: 'nowrap',
-            opacity: cargando ? 0.7 : 1,
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--g800)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'var(--g700)'; e.currentTarget.style.transform = 'translateY(0)' }}
-        >
+        <button onClick={onBuscar} disabled={cargando} className="lic-btn-buscar">
           <Search size={14} />
           {cargando ? 'Buscando...' : 'Buscar CPV'}
         </button>
@@ -89,7 +42,7 @@ function TarjetaLicitacion({ licitacion: l, index: i, guardada, onSeleccionar, o
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min(i * 0.035, 0.5) }}
-      style={{ width: '100%', maxWidth: 380 }}
+      className="lic-tarjeta-wrap"
     >
       <LicitacionCard
         licitacion={l}
@@ -164,19 +117,16 @@ export default function Licitaciones() {
 
   const buscarCPV = useCallback(() => {
     const codigo = cpvQuery.trim()
-
     if (!codigo) {
       setCpvResultados(null)
       setCpvBuscadoCodigo('')
       setCpvError(null)
       return
     }
-
     if (!/^\d{2,}$/.test(codigo)) {
       setCpvError('Introduce un código CPV válido (solo números, mínimo 2 dígitos)')
       return
     }
-
     setCpvError(null)
     setCpvCargando(true)
     fetch(`/api/buscar-cpv?codigo=${encodeURIComponent(codigo)}`)
@@ -191,11 +141,7 @@ export default function Licitaciones() {
   }, [cpvQuery])
 
   const provincias = useMemo(() => {
-    return [...new Set(
-      licitaciones
-        .map(l => l.provincia)
-        .filter(Boolean)
-    )].sort()
+    return [...new Set(licitaciones.map(l => l.provincia).filter(Boolean))].sort()
   }, [licitaciones])
 
   const licitacionesFiltradas = useMemo(() => {
@@ -222,11 +168,7 @@ export default function Licitaciones() {
   const renderGrid = (lista) => (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-        gap: 20,
-      }}
+      className="lic-grid"
     >
       {lista.map((l, i) => (
         <TarjetaLicitacion
@@ -273,44 +215,26 @@ export default function Licitaciones() {
           {cpvCargando && <Spinner />}
 
           {cpvError && !cpvCargando && (
-            <div style={{
-              background: 'var(--rojo-bg)',
-              border: '1px solid var(--rojo-borde)',
-              borderRadius: 'var(--r-lg)',
-              padding: '16px 20px',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
+            <div className="lic-error">
               <BlueprintFrame size={36} color="var(--rojo-borde)">
                 <AlertTriangle size={16} color="var(--rojo)" />
               </BlueprintFrame>
-              <span style={{ fontSize: 13, color: 'var(--rojo)', fontWeight: 500 }}>
-                {cpvError}
-              </span>
+              <span className="lic-error__text">{cpvError}</span>
             </div>
           )}
 
           {!cpvCargando && !cpvError && (
             <>
-              <p style={{ fontSize: 13, color: 'var(--n500)', fontWeight: 600, marginBottom: 16 }}>
+              <p className="lic-cpv-count">
                 {cpvResultados.length} licitaciones encontradas para CPV {cpvBuscadoCodigo}
               </p>
-
               {cpvResultados.length === 0 ? (
-                <div style={{
-                  minHeight: 300,
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                  gap: 12,
-                }}>
+                <div className="lic-vacio">
                   <BlueprintFrame size={96}>
                     <SearchX size={36} color="var(--n300)" />
                   </BlueprintFrame>
-                  <span style={{ fontFamily: 'var(--font-titulo)', fontSize: 16, fontWeight: 700, color: 'var(--n500)' }}>
-                    No hay licitaciones en plazo con ese código CPV
-                  </span>
-                  <span style={{ fontSize: 13, color: 'var(--n300)' }}>
-                    Prueba con un código más corto o distinto
-                  </span>
+                  <span className="lic-vacio__titulo">No hay licitaciones en plazo con ese código CPV</span>
+                  <span className="lic-vacio__sub">Prueba con un código más corto o distinto</span>
                 </div>
               ) : renderGrid(cpvResultados)}
             </>
@@ -321,17 +245,11 @@ export default function Licitaciones() {
           {cargando && <Spinner />}
 
           {error && !cargando && (
-            <div style={{
-              background: 'var(--rojo-bg)',
-              border: '1px solid var(--rojo-borde)',
-              borderRadius: 'var(--r-lg)',
-              padding: '16px 20px',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
+            <div className="lic-error">
               <BlueprintFrame size={36} color="var(--rojo-borde)">
                 <WifiOff size={16} color="var(--rojo)" />
               </BlueprintFrame>
-              <span style={{ fontSize: 13, color: 'var(--rojo)', fontWeight: 500 }}>
+              <span className="lic-error__text">
                 No se ha podido conectar con el servidor de licitaciones.
                 Asegúrate de que el servidor está arrancado e inténtalo de nuevo.
               </span>
@@ -339,21 +257,12 @@ export default function Licitaciones() {
           )}
 
           {!cargando && !error && licitacionesFiltradas.length === 0 && (
-            <div style={{
-              minHeight: 300,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 12,
-            }}>
+            <div className="lic-vacio">
               <BlueprintFrame size={96}>
                 <SearchX size={36} color="var(--n300)" />
               </BlueprintFrame>
-              <span style={{ fontFamily: 'var(--font-titulo)', fontSize: 16, fontWeight: 700, color: 'var(--n500)' }}>
-                No hay licitaciones con estos filtros
-              </span>
-              <span style={{ fontSize: 13, color: 'var(--n300)' }}>
-                Prueba a ampliar la búsqueda o eliminar algún filtro
-              </span>
+              <span className="lic-vacio__titulo">No hay licitaciones con estos filtros</span>
+              <span className="lic-vacio__sub">Prueba a ampliar la búsqueda o eliminar algún filtro</span>
             </div>
           )}
 

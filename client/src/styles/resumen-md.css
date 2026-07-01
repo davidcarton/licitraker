@@ -1,0 +1,16 @@
+/* ── Estilos compartidos para el contenido Markdown de resúmenes IA ──────────── */
+
+.resumen-md { font-size: 14px; color: var(--n700); line-height: 1.75; }
+.resumen-md h2,
+.resumen-md h3 { font-family: var(--font-titulo); font-weight: 700; color: #1a3d28; margin: 20px 0 6px; }
+.resumen-md h2 { font-size: 15px; }
+.resumen-md h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #2A5938; }
+.resumen-md p { margin-bottom: 10px; }
+.resumen-md ul,
+.resumen-md ol { padding-left: 20px; margin-bottom: 10px; }
+.resumen-md li { margin-bottom: 4px; }
+.resumen-md strong { font-weight: 700; color: #1a3d28; }
+.resumen-md table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
+.resumen-md th { background: #EAF4EE; color: #1a3d28; font-weight: 700; padding: 8px 12px; text-align: left; border: 1px solid #C9E2D2; }
+.resumen-md td { padding: 7px 12px; border: 1px solid #e5e7eb; vertical-align: top; }
+.resumen-md tr:nth-child(even) td { background: #f9fafb; }

@@ -1,0 +1,417 @@
+/* ── Configuracion ───────────────────────────────────────────────────────────── */
+
+/* ─── Tabs ────────────────────────────────────────────────────────────────── */
+.cfg-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--n100);
+  margin-bottom: 24px;
+}
+.cfg-tab {
+  padding: 12px 20px;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  color: var(--n400);
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition), border-color var(--transition);
+}
+.cfg-tab--activo {
+  color: var(--negro);
+  border-bottom-color: var(--verde);
+}
+
+/* ─── Toast ───────────────────────────────────────────────────────────────── */
+.cfg-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--negro);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-hover);
+  z-index: 100;
+}
+
+/* ─── Card genérica ───────────────────────────────────────────────────────── */
+.cfg-card {
+  background: #fff;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--n100);
+  box-shadow: var(--shadow-card);
+  padding: 22px 24px;
+}
+.cfg-card--peligro { border-color: var(--rojo-borde); }
+.cfg-card__titulo {
+  font-family: var(--font-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.cfg-card__titulo--rojo { color: var(--rojo); margin: 0 0 6px; }
+.cfg-card__subtitulo {
+  font-size: 12px;
+  color: var(--n400);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+.cfg-card__body { margin-top: 18px; }
+
+/* ─── Campo ───────────────────────────────────────────────────────────────── */
+.cfg-campo-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--n400);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.cfg-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--n100);
+  font-size: 14px;
+  color: var(--n900);
+  background: var(--gris-fondo);
+}
+.cfg-input--pr { padding-right: 32px; }
+
+/* ─── Grid de campos ──────────────────────────────────────────────────────── */
+.cfg-campos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.cfg-campos-mt { margin-top: 20px; }
+
+/* ─── Botón guardar ───────────────────────────────────────────────────────── */
+.cfg-btn-guardar-wrap { display: flex; justify-content: flex-end; }
+.cfg-btn-guardar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: var(--r-md);
+  background: var(--verde);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  transition: background var(--transition);
+}
+.cfg-btn-guardar:hover { background: var(--verde-medio); }
+
+/* ─── Toggle ──────────────────────────────────────────────────────────────── */
+.cfg-toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 100px;
+  flex-shrink: 0;
+  border: none;
+  position: relative;
+  transition: background var(--transition);
+}
+.cfg-toggle--on  { background: var(--verde); }
+.cfg-toggle--off { background: var(--n100);  }
+.cfg-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: left var(--transition);
+}
+.cfg-toggle__thumb--on  { left: 23px; }
+.cfg-toggle__thumb--off { left: 3px;  }
+
+/* ─── Tab Perfil ──────────────────────────────────────────────────────────── */
+.cfg-perfil { display: flex; flex-direction: column; gap: 24px; }
+.cfg-eliminar-desc {
+  font-size: 13px;
+  color: var(--n500);
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+.cfg-btn-eliminar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--r-md);
+  background: var(--rojo-bg);
+  color: var(--rojo);
+  border: 1px solid var(--rojo-borde);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+}
+.cfg-eliminar-confirmar { display: flex; flex-direction: column; gap: 12px; }
+.cfg-eliminar-aviso {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--rojo);
+  margin: 0;
+}
+.cfg-eliminar-acciones { display: flex; gap: 10px; }
+.cfg-btn-cancelar {
+  padding: 9px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--n100);
+  background: #fff;
+  color: var(--n500);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+.cfg-btn-cancelar:disabled { opacity: 0.7; }
+.cfg-btn-confirmar-rojo {
+  padding: 9px 18px;
+  border-radius: var(--r-md);
+  background: var(--rojo);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+}
+.cfg-btn-confirmar-rojo:disabled { opacity: 0.7; }
+.cfg-error-eliminar { font-size: 12px; color: var(--rojo); font-weight: 600; }
+
+/* ─── Tab Preferencias ────────────────────────────────────────────────────── */
+.cfg-pref-cabecera { margin-bottom: 24px; }
+.cfg-pref-titulo {
+  font-family: var(--font-titulo);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.cfg-pref-subtitulo {
+  font-size: 13px;
+  color: var(--n400);
+  margin-top: 6px;
+  max-width: 640px;
+}
+.cfg-pref-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+.cfg-pref-col { display: flex; flex-direction: column; gap: 20px; }
+.cfg-importe-plazos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.cfg-tipos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px 16px;
+}
+.cfg-tipo-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--n700);
+  cursor: pointer;
+}
+.cfg-tipo-checkbox { width: 16px; height: 16px; accent-color: #3D7A4F; }
+.cfg-provincias-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.cfg-provincia-btn {
+  padding: 7px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  transition: all var(--transition);
+}
+.cfg-provincia-btn--activa {
+  border: 1px solid var(--verde);
+  background: var(--verde-claro);
+  color: var(--verde);
+}
+.cfg-provincia-btn--inactiva {
+  border: 1px solid var(--n100);
+  background: #fff;
+  color: var(--n500);
+}
+.cfg-importe-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.cfg-importe-col { flex: 1; min-width: 120px; }
+.cfg-importe-input-wrap { position: relative; }
+.cfg-importe-euro {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--n400);
+}
+.cfg-plazos { display: flex; flex-direction: column; gap: 10px; }
+.cfg-plazo-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--n700);
+  cursor: pointer;
+}
+.cfg-plazo-radio { width: 16px; height: 16px; accent-color: #3D7A4F; }
+.cfg-notif-lista { display: flex; flex-direction: column; gap: 18px; }
+.cfg-notif-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cfg-notif-item--separado {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--n50);
+}
+.cfg-notif-label { font-size: 13px; font-weight: 700; color: var(--negro); }
+.cfg-notif-desc  { font-size: 12px; color: var(--n400); margin-top: 4px; }
+
+/* ─── Tab CRM ─────────────────────────────────────────────────────────────── */
+.cfg-crm-titulo {
+  font-family: var(--font-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.cfg-crm-subtitulo {
+  font-size: 13px;
+  color: var(--n400);
+  margin-top: 6px;
+  margin-bottom: 24px;
+  max-width: 640px;
+}
+.cfg-crm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* ─── ConectorCard ────────────────────────────────────────────────────────── */
+.cfg-conector-card {
+  background: #fff;
+  border: 1px solid var(--n100);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cfg-conector-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cfg-conector-nombre {
+  font-family: var(--font-titulo);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--negro);
+}
+.cfg-conector-desc { font-size: 12px; color: var(--n400); margin-top: 4px; }
+.cfg-badge-proximo {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--n100);
+  color: var(--n400);
+  font-size: 11px;
+  font-weight: 700;
+}
+.cfg-badge-activo { font-size: 12px; font-weight: 700; color: var(--verde); }
+.cfg-btn-conectar {
+  align-self: flex-start;
+  padding: 7px 16px;
+  border-radius: var(--r-md);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+}
+
+/* ─── ModalConectar ───────────────────────────────────────────────────────── */
+.cfg-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17,25,23,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 100;
+}
+.cfg-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%; /* CSS translate property — no interfiere con transform de Framer Motion */
+  width: min(440px, 90vw);
+  background: #fff;
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-hover);
+  z-index: 101;
+  padding: 28px 28px 24px;
+}
+.cfg-modal__cerrar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--n300);
+}
+.cfg-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.cfg-modal__icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cfg-modal__titulo {
+  font-family: var(--font-titulo);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--negro);
+  margin: 0;
+}
+.cfg-modal__desc {
+  font-size: 13px;
+  color: var(--n500);
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.cfg-modal__btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: var(--r-md);
+  background: var(--verde);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+}

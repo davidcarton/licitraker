@@ -1,0 +1,84 @@
+/* ── Layout Header (página pública) ─────────────────────────────────────────── */
+
+.layout-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 58px;
+  background: var(--g900);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* ─── Logo ────────────────────────────────────────────────────────────────── */
+.layout-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.layout-header__logo-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.layout-header__nombre {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.layout-header__sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.38);
+  font-weight: 400;
+}
+
+/* ─── Subtítulo centrado ──────────────────────────────────────────────────── */
+.header-subtitle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+  font-family: var(--font-body);
+  pointer-events: none;
+}
+
+/* ─── Badge "En directo" ──────────────────────────────────────────────────── */
+.layout-header__badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(90,154,110,0.12);
+  border: 1px solid rgba(90,154,110,0.3);
+  border-radius: 100px;
+  padding: 5px 12px;
+}
+.layout-header__badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--g500);
+  animation: pulse-glow 2.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.layout-header__badge-texto {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--g500);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Media queries ───────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .header-subtitle { display: none !important; }
+}
