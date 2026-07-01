@@ -43,7 +43,7 @@ Demo en producción: **http://187.33.144.208:3002**
 ```
 licitraker/
 ├── backend/
-│   ├── server.js                  # Servidor principal Express + endpoints IA
+│   ├── server.js                  # Servidor principal Express + endpoints IA + DELETE /api/mi-cuenta
 │   ├── knexfile.js                # Configuración Knex (dev/prod)
 │   ├── scripts/
 │   │   ├── crear-superadmin.js    # Script para crear usuario superadmin
@@ -73,7 +73,7 @@ licitraker/
 │       │   ├── auth.js            # /api/auth — login, register, logout, me
 │       │   ├── licitaciones.js    # /api/licitaciones-guardadas — CRUD por empresa
 │       │   ├── admin.js           # /api/admin — estado, negocio y logs (solo superadmin)
-│       │   └── clientes.js        # /api/admin/clientes — listado, detalle, edición, reseteo y email
+│       │   └── clientes.js        # /api/admin/clientes — listado, detalle, edición, reseteo, email y DELETE
 │       ├── utils/
 │       │   ├── logger.js          # Logger en memoria (últimas 200 entradas)
 │       │   └── pliegos.js         # obtenerPliegosPDF — descarga PDFs del perfil del contratante
@@ -95,20 +95,25 @@ licitraker/
         │   ├── VisionNegocio.jsx   # Panel superadmin — 4 KPIs (MRR, clientes activos, altas semana, Coste IA API),
         │   │                       # gráfica crecimiento mensual, estado cuentas + ingresos por plan,
         │   │                       # últimas incorporaciones
-        │   ├── Licitaciones.jsx    # Listado del feed PLACSP con filtros + botón Resumen IA por tarjeta
+        │   ├── Licitaciones.jsx    # Listado del feed PLACSP; barra de búsqueda por CPV en la parte
+        │   │                       # superior + filtros debajo (FiltroBarra); sin búsqueda por texto libre
         │   ├── ResumenIA.jsx       # Generación de resumen IA de una licitación (ruta /dashboard/resumen)
         │   ├── MisResumenes.jsx    # Historial de resúmenes guardados (ruta /dashboard/resumenes)
-        │   ├── Configuracion.jsx   # Perfil / Preferencias / Integrar CRM (solo usuarios no-superadmin)
+        │   ├── Configuracion.jsx   # Perfil / Preferencias / Integrar CRM + sección "Eliminar cuenta"
+        │   │                       # en tab Perfil (confirmación en dos pasos) — solo usuarios no-superadmin
         │   ├── EstadoSistema.jsx   # Panel superadmin — CPU/RAM/disco, Docker, feed PLACSP, latencia API
         │   │                       # (ruta /dashboard/admin/estado — accesible por URL, no en sidebar)
         │   ├── LogsErrores.jsx     # Panel superadmin — errores, avisos y peticiones HTTP fallidas
         │   └── GestionClientes.jsx # Panel superadmin — lista de clientes; detalle inline con edición,
-        │                           # email directo, preferencias y usuarios
+        │                           # email directo, preferencias, usuarios y card "Eliminar cliente"
+        │                           # con modal de confirmación
         ├── components/
         │   ├── auth/              # AuthLayout, FormInput, RutaProtegida
+        │   ├── layout/            # Header.jsx — header fijo de la app pública (logo + nav)
         │   ├── dashboard/         # DashboardLayout, Sidebar, Header, KPICard, TablaUrgentes (sin usar)
         │   ├── cards/             # LicitacionCard, LicitacionModal
-        │   └── ui/                # Alert, Badge, DataTable, FiltroBarra, Spinner, etc.
+        │   └── ui/                # Alert, Badge, BlueprintFrame, DataTable, EstadoBar, FiltroBarra,
+        │                          # SearchInput, SlideOver, Spinner, Tabs, etc.
         ├── styles/
         │   └── global.css         # Variables CSS + estilos base
         └── utils/
@@ -334,6 +339,13 @@ El coste final combina los tokens de Haiku (bloques) y Sonnet (síntesis) cuando
 | `PATCH` | `/api/admin/clientes/:id` | Edita plan, precio_mensual y/o activa de un cliente |
 | `PATCH` | `/api/admin/clientes/:id/usuarios/:usuarioId/password` | Resetea la contraseña de un usuario dentro de un cliente |
 | `POST` | `/api/admin/clientes/:id/email` | Envía un email a todos los usuarios del cliente vía SMTP |
+| `DELETE` | `/api/admin/clientes/:id` | Elimina un cliente (empresa) y todo en cascada — excluye empresas con plan `admin` |
+
+### Cuenta propia — requiere JWT
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `DELETE` | `/api/mi-cuenta` | El propio usuario elimina su cuenta (y su empresa + datos en cascada) |
 
 ---
 
@@ -432,6 +444,10 @@ pm2 stop LiciTraker         # Parar
 - **Resúmenes IA sin empresa_id**: Los resúmenes generados antes de la migración 011 tienen `empresa_id = NULL`. No aparecen en ninguna vista de usuario normal (filtro por `empresa_id` excluye los nulos), pero sí son visibles para el superadmin en el historial.
 - **Coste IA (badge €)**: solo visible para el superadmin, tanto en las tarjetas de `MisResumenes.jsx` como en el KPI "Coste IA (API)" de `VisionNegocio.jsx`. Los usuarios normales nunca ven información de coste.
 - **`TablaUrgentes.jsx`** (`client/src/components/dashboard/`) quedó sin uso tras el rediseño del Dashboard. No se ha borrado por si se quiere recuperar esa vista.
+- **Búsqueda en Licitaciones**: la barra de búsqueda por texto libre fue eliminada. En su lugar hay una barra de búsqueda específica por código CPV (`BarraBusquedaCPV`, definida inline en `Licitaciones.jsx`) en la parte superior; los filtros habituales (FiltroBarra) van debajo. El endpoint `GET /api/buscar-cpv?codigo=` gestiona estas búsquedas.
+- **Header del dashboard**: el Header del dashboard (`components/dashboard/Header.jsx`) ya no tiene barra de búsqueda ni botón "nueva alerta" — es un componente simplificado. Existe también `components/layout/Header.jsx`, un header estático con logo y navegación para las páginas públicas.
+- **Eliminación de clientes**: el endpoint `DELETE /api/admin/clientes/:id` borra en cascada toda la empresa. La UI en `GestionClientes.jsx` muestra una card "Eliminar cliente" con modal de confirmación al final del detalle del cliente.
+- **Eliminación de cuenta propia**: el endpoint `DELETE /api/mi-cuenta` (en `server.js`) permite al propio usuario borrar su cuenta. La UI en `Configuracion.jsx` (tab Perfil) implementa confirmación en dos pasos. No disponible para superadmin.
 - **Fuentes**: `--font-display` (Syne 800) es un display font pesado, poco legible en tamaños pequeños/densos. Usar `--font-titulo` (Inter) o `'DM Sans'` para títulos de tarjeta e importes; reservar Syne para titulares grandes.
 - **Gráfica de resultados del Dashboard** (`GraficaResultados` en `Dashboard.jsx`) se construye con divs CSS (sin librería de gráficos), agrupando por mes a partir de `fechaResolucion`. Solo se muestra el desglose mensual si hay datos de más de un mes.
 - **Envío de email sin SMTP configurado**: si `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` no están en el `.env`, el endpoint `POST /api/admin/clientes/:id/email` devuelve 500 pero el resto del panel funciona con normalidad.

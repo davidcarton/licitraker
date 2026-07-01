@@ -1,12 +1,17 @@
 const router = require('express').Router()
+const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
 const db = require('../db')
 const auth = require('../middleware/auth')
 const requireAdmin = require('../middleware/admin')
 const logger = require('../utils/logger')
-const bcrypt = require('bcryptjs')
-const nodemailer = require('nodemailer')
 
 router.use(auth, requireAdmin)
+
+// Helper compartido: busca una empresa que no sea la cuenta admin
+function buscarCliente(id) {
+  return db('empresas').whereNot('plan', 'admin').where('id', id).first()
+}
 
 router.get('/', async (req, res) => {
   try {
@@ -33,22 +38,13 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const empresa = await db('empresas')
-      .whereNot('plan', 'admin')
-      .where('id', req.params.id)
-      .first()
+    const empresa = await buscarCliente(req.params.id)
+    if (!empresa) return res.status(404).json({ error: 'Cliente no encontrado' })
 
-    if (!empresa) {
-      return res.status(404).json({ error: 'Cliente no encontrado' })
-    }
-
-    const usuarios = await db('usuarios')
-      .where('empresa_id', empresa.id)
-      .select('id', 'nombre', 'email', 'rol', 'activo')
-
-    const preferencias = await db('preferencias')
-      .where('empresa_id', empresa.id)
-      .first()
+    const [usuarios, preferencias] = await Promise.all([
+      db('usuarios').where('empresa_id', empresa.id).select('id', 'nombre', 'email', 'rol', 'activo'),
+      db('preferencias').where('empresa_id', empresa.id).first(),
+    ])
 
     res.json({
       id: empresa.id,
@@ -78,20 +74,14 @@ router.get('/:id', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
-    const empresa = await db('empresas').whereNot('plan', 'admin').where('id', req.params.id).first()
-    if (!empresa) {
-      return res.status(404).json({ error: 'Cliente no encontrado' })
-    }
+    const empresa = await buscarCliente(req.params.id)
+    if (!empresa) return res.status(404).json({ error: 'Cliente no encontrado' })
 
     const cambios = {}
     if (req.body.plan !== undefined) {
       const plan = String(req.body.plan).trim()
-      if (!plan) {
-        return res.status(400).json({ error: 'El plan no puede estar vacío' })
-      }
-      if (plan.length > 50) {
-        return res.status(400).json({ error: 'El plan no puede tener más de 50 caracteres' })
-      }
+      if (!plan) return res.status(400).json({ error: 'El plan no puede estar vacío' })
+      if (plan.length > 50) return res.status(400).json({ error: 'El plan no puede tener más de 50 caracteres' })
       cambios.plan = plan
     }
     if (req.body.precio_mensual !== undefined) {
@@ -100,9 +90,7 @@ router.patch('/:id', async (req, res) => {
         cambios.precio_mensual = null
       } else {
         const num = Number(precio)
-        if (isNaN(num) || num < 0) {
-          return res.status(400).json({ error: 'El precio mensual debe ser un número positivo' })
-        }
+        if (isNaN(num) || num < 0) return res.status(400).json({ error: 'El precio mensual debe ser un número positivo' })
         cambios.precio_mensual = num
       }
     }
@@ -114,9 +102,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(400).json({ error: 'No se ha indicado ningún cambio' })
     }
 
-    cambios.updated_at = db.fn.now()
-    await db('empresas').where('id', empresa.id).update(cambios)
-
+    await db('empresas').where('id', empresa.id).update({ ...cambios, updated_at: db.fn.now() })
     res.json({ ok: true })
   } catch (err) {
     logger.error('clientes', 'Error al actualizar cliente: ' + err.message)
@@ -126,26 +112,22 @@ router.patch('/:id', async (req, res) => {
 
 router.patch('/:id/usuarios/:usuarioId/password', async (req, res) => {
   try {
-    const empresa = await db('empresas').whereNot('plan', 'admin').where('id', req.params.id).first()
-    if (!empresa) {
-      return res.status(404).json({ error: 'Cliente no encontrado' })
-    }
+    const empresa = await buscarCliente(req.params.id)
+    if (!empresa) return res.status(404).json({ error: 'Cliente no encontrado' })
 
     const usuario = await db('usuarios')
-      .where('id', req.params.usuarioId)
-      .where('empresa_id', empresa.id)
+      .where({ id: req.params.usuarioId, empresa_id: empresa.id })
       .first()
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' })
-    }
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' })
 
     const { password } = req.body || {}
     if (!password || password.length < 8) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' })
     }
 
-    const passwordHash = await bcrypt.hash(password, 10)
-    await db('usuarios').where('id', usuario.id).update({ password_hash: passwordHash })
+    await db('usuarios')
+      .where('id', usuario.id)
+      .update({ password_hash: await bcrypt.hash(password, 10) })
 
     res.json({ ok: true })
   } catch (err) {
@@ -160,20 +142,15 @@ router.post('/:id/email', async (req, res) => {
       return res.status(500).json({ error: 'El servicio de email no está configurado en el servidor' })
     }
 
-    const empresa = await db('empresas').whereNot('plan', 'admin').where('id', req.params.id).first()
-    if (!empresa) {
-      return res.status(404).json({ error: 'Cliente no encontrado' })
-    }
+    const empresa = await buscarCliente(req.params.id)
+    if (!empresa) return res.status(404).json({ error: 'Cliente no encontrado' })
 
-    const { asunto, cuerpo } = req.body || {}
-    if (!asunto || !String(asunto).trim()) {
-      return res.status(400).json({ error: 'El asunto es obligatorio' })
-    }
-    if (!cuerpo || !String(cuerpo).trim()) {
-      return res.status(400).json({ error: 'El mensaje es obligatorio' })
-    }
+    const asunto = String(req.body?.asunto || '').trim()
+    const cuerpo = String(req.body?.cuerpo || '').trim()
+    if (!asunto) return res.status(400).json({ error: 'El asunto es obligatorio' })
+    if (!cuerpo) return res.status(400).json({ error: 'El mensaje es obligatorio' })
 
-    const usuarios = await db('usuarios').where('empresa_id', empresa.id).select('email', 'nombre')
+    const usuarios = await db('usuarios').where('empresa_id', empresa.id).select('email')
     if (usuarios.length === 0) {
       return res.status(400).json({ error: 'Esta empresa no tiene usuarios a los que enviar el email' })
     }
@@ -185,16 +162,14 @@ router.post('/:id/email', async (req, res) => {
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     })
 
-    const destinatarios = usuarios.map(u => u.email).join(', ')
-
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: destinatarios,
-      subject: String(asunto).trim(),
-      text: String(cuerpo).trim(),
+      to: usuarios.map(u => u.email).join(', '),
+      subject: asunto,
+      text: cuerpo,
     })
 
-    logger.info?.('clientes', `Email enviado a ${empresa.nombre} (${destinatarios})`)
+    logger.info?.('clientes', `Email enviado a ${empresa.nombre}`)
     res.json({ ok: true })
   } catch (err) {
     logger.error('clientes', 'Error al enviar email: ' + err.message)
@@ -204,7 +179,7 @@ router.post('/:id/email', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const empresa = await db('empresas').whereNot('plan', 'admin').where('id', req.params.id).first()
+    const empresa = await buscarCliente(req.params.id)
     if (!empresa) return res.status(404).json({ error: 'Cliente no encontrado' })
     await db('empresas').where('id', empresa.id).del()
     logger.info?.('clientes', `Empresa eliminada: ${empresa.nombre} (id=${empresa.id})`)
